@@ -1,0 +1,45 @@
+https://www.linode.com/docs/guides/getting-started/
+
+echo "<WANTEDHOSTNAME>" > /etc/hostname
+hostname -F /etc/hostname
+nano /etc/hosts
+// Add public IP or FQDN:
+//e.g. 203.0.113.10 example-hostname.example.com example-hostname
+
+// log out + log in for hostname update
+
+//Check timezone
+dpkg-reconfigure tzdata
+
+# Installing tomcat:
+## https://www.linode.com/docs/guides/apache-tomcat-on-debian-10/
+ apt-get update && apt-get upgrade
+ sudo apt-get install tomcat9
+ sudo apt-get install tomcat9-docs tomcat9-examples tomcat9-admin
+
+## Start:
+ sudo systemctl start tomcat9
+
+## Stop:
+ sudo systemctl stop tomcat9
+
+## Restart:
+ sudo systemctl restart tomcat9
+
+
+# Change root access to tomcat manager:
+ nano /var/lib/tomcat9/conf/tomcat-users.xml
+
+ <role rolename="manager-gui"/>
+ <role rolename="admin-gui"/>
+ <user username="username" password="password" roles="manager-gui,admin-gui"/>
+
+
+# Change tomcat port (e.g. 8080 -> 80 (=HTTP))
+ nano /var/lib/tomcat9/conf/server.xml
+ 
+-> scroll to <Connector port="8080" ...>
+-> replace 8080 by wanted port
+
+# Changing root page
+ mv 

@@ -1,0 +1,6 @@
+{
+    "id": 1,
+    "pipelineConfigType": "custom",
+    "mentionDetector": "Babelfy",
+    "candidateGeneratorDisambiguator": "Babelfy"
+}

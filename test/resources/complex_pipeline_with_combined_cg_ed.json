@@ -1,0 +1,35 @@
+{
+	"id": 1,
+	"pipelineConfigType": "complex",
+	"components": {
+		"md": [
+			{
+				"id": "MD1",
+				"value": "Babelfy"
+			}
+		],
+		"cg": [],
+		"cg_ed": [
+			{
+				"id": "CG_ED1",
+				"value": "Babelfy"
+			}
+		],
+		"ed": [],
+		"combiner": [],
+		"splitter": [],
+		"translator": []
+	},
+	"connections": [
+		{
+			"source": "MD1",
+			"target": "CG_ED1"
+		}
+	],
+	"startComponents": [
+		"MD1"
+	],
+	"endComponents": [
+		"CG_ED1"
+	]
+}

@@ -1,0 +1,65 @@
+{
+    "id": 1,
+    "pipelineConfigType": "complex",
+    "components": {
+        "md": [
+            {
+                "id": "MD1",
+                "value": "Babelfy"
+            },
+            {
+            	"id": "MD2",
+            	"value": "DBpediaSpotlight"
+            }
+        ],
+        "cg": [],
+        "cg_ed": [
+            {
+                "id": "CG_ED1",
+                "value": "Babelfy"
+            }
+        ],
+        "ed": [],
+        "combiner": [
+	        {
+	        	"id": "CO1",
+	        	"value": "union"
+	        }
+        ],
+        "splitter": [
+        	{
+        		"id": "SP1",
+        		"value": "copy"
+        	}
+        ],
+        "translator": []
+    },
+    "connections": [
+        {
+            "source": "SP1",
+            "target": "MD1"
+        },
+        {
+            "source": "SP1",
+            "target": "MD2"
+        },
+        {
+            "source": "MD1",
+            "target": "CO1"
+        },
+        {
+            "source": "MD2",
+            "target": "CO1"
+        },
+        {
+            "source": "CO1",
+            "target": "CG_ED1"
+        }
+    ],
+    "startComponents": [
+        "SP1"
+    ],
+    "endComponents": [
+        "CG_ED1"
+    ]
+}

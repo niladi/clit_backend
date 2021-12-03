@@ -1,0 +1,56 @@
+{
+	"id": 1,
+	"pipelineConfigType": "complex",
+	"components": {
+		"md": [
+			{
+				"id": "MD1",
+				"value": "Babelfy"
+			}
+		],
+		"cg": [],
+		"cg_ed": [
+			{
+				"id": "CG_ED1",
+				"value": "Babelfy"
+			}
+		],
+		"ed": [],
+		"combiner": [],
+		"splitter": [],
+		"translator": [
+			{
+				"id": "TR1",
+				"value": "DBP2WD"
+			},
+			{
+				"id": "TR2",
+				"value": "WD2dbp"
+			},
+			{
+				"id": "TR3",
+				"value": "127.0.0.1:5050"
+			}
+		]
+	},
+	"connections": [
+		{
+			"source": "MD1",
+			"target": "CG_ED1"
+		},
+		{
+			"source": "CG_ED1",
+			"target": "TR1"
+		},
+		{
+			"source": "TR1",
+			"target": "TR2"
+		}
+	],
+	"startComponents": [
+		"MD1"
+	],
+	"endComponents": [
+		"TR2"
+	]
+}

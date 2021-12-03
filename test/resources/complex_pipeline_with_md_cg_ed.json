@@ -1,0 +1,44 @@
+{
+    "id": 1,
+    "pipelineConfigType": "complex",
+    "components": {
+        "md": [
+            {
+                "id": "MD1",
+                "value": "Babelfy"
+            }
+        ],
+        "cg": [
+            {
+                "id": "CG1",
+                "value": "DBpediaSpotlight"
+            }
+        ],
+        "cg_ed": [],
+        "ed": [
+            {
+                "id": "ED1",
+                "value": "Babelfy"
+            }
+        ],
+        "combiner": [],
+        "splitter": [],
+        "translator": []
+    },
+    "connections": [
+        {
+            "source": "MD1",
+            "target": "CG1"
+        },
+        {
+            "source": "CG1",
+            "target": "ED1"
+        }
+    ],
+    "startComponents": [
+        "MD1"
+    ],
+    "endComponents": [
+        "ED1"
+    ]
+}

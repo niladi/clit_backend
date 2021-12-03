@@ -1,0 +1,35 @@
+{
+	"id": 1,
+	"pipelineConfigType": "complex",
+	"components": {
+		"md": [
+			{
+				"id": "MD1",
+				"value": "spaCy"
+			}
+		],
+		"cg": [
+			{
+				"id": "CG1",
+				"value": "DBpediaLookup"
+			}
+		],
+		"cg_ed": [],
+		"ed": [],
+		"combiner": [],
+		"splitter": [],
+		"translator": []
+	},
+	"connections": [
+		{
+			"source": "MD1",
+			"target": "CG1"
+		}
+	],
+	"startComponents": [
+		"MD1"
+	],
+	"endComponents": [
+		"CG1"
+	]
+}
