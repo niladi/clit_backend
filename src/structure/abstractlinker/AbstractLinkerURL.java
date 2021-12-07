@@ -56,7 +56,7 @@ public abstract class AbstractLinkerURL extends AbstractLinkerWebAPI implements 
 		return new HashSet<>(this.params.keySet());
 	}
 
-	private final int invalidPort = -1;
+	protected final int invalidPort = -1;
 	private final String defaultScheme = http;
 	private int timeout = 1_000_000;
 	private String url = null;
@@ -195,7 +195,7 @@ public abstract class AbstractLinkerURL extends AbstractLinkerWebAPI implements 
 		}
 	}
 
-	private int getPort() {
+	protected int getPort() {
 		return this.port;
 	}
 

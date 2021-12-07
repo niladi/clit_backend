@@ -85,6 +85,8 @@ public enum FilePaths {
 	// ##################################
 	// FILES for src/main
 	// ##################################
+	FILE_API_KEYS("api_keys.properties"), //
+
 	FILE_STOPWORDS(DIR_DATA.path + "stopwords.txt"), //
 
 	FILE_CRUNCHBASE_ENTITIES(DIR_DATA.path + "crunchbase_entities.nt"), //
@@ -272,6 +274,7 @@ public enum FilePaths {
 	DIR_EXPERIMENT_RESULTS(DIR_DATA.path + "experiment_results/"), //
 
 	;
+
 	protected final String path;
 	private final String val;
 

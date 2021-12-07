@@ -7,18 +7,15 @@ import java.net.ProtocolException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.function.BiFunction;
 
 import structure.abstractlinker.AbstractLinkerURL;
 import structure.abstractlinker.AbstractLinkerURLPOST;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
 import structure.interfaces.linker.LinkerNIF;
-import structure.utils.FunctionUtils;
 import structure.utils.LinkerUtils;
 
-public class OpenTapiocaLinker extends AbstractLinkerURLPOST
-		implements LinkerNIF {
+public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNIF {
 	public Number defaultScore = 0.5d;// 1.0d// getWeight()
 	;
 

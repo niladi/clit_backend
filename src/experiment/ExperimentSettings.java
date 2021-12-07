@@ -14,6 +14,8 @@ import com.google.common.collect.Lists;
 
 import clit.combiner.IntersectCombiner;
 import clit.combiner.UnionCombiner;
+import clit.eval.NIFBaseEvaluator;
+import clit.eval.explainer.PrecisionRecallF1Explainer;
 import clit.splitter.CopySplitter;
 import clit.translator.TranslatorDBpediaToWikidata;
 import clit.translator.TranslatorWikidataToDBpedia;
@@ -25,6 +27,7 @@ import linking.linkers.BabelfyLinker;
 import linking.linkers.DBpediaSpotlightLinker;
 import linking.linkers.EntityClassifierEULinker;
 import linking.linkers.FOXLinker;
+import linking.linkers.Falcon2Linker;
 import linking.linkers.MAGLinker;
 import linking.linkers.OpenTapiocaLinker;
 import linking.linkers.RadboudLinker;
@@ -117,6 +120,9 @@ public enum ExperimentSettings {
 		// TextRazor
 		addComponent("TextRazor", TextRazorLinker.class);
 
+		// Falcon 2.0
+		addComponent("Falcon 2.0", Falcon2Linker.class);//
+
 		// spaCy - MD
 		addComponent("spaCy", SpaCyMentionDetector.class, EnumPipelineType.MD);
 
@@ -132,7 +138,7 @@ public enum ExperimentSettings {
 	 * Adds a component and tries to identify how it may be used based on
 	 * implemented interfaces
 	 * 
-	 * @param name key in map and display name for front-end (for now at least)
+	 * @param name      key in map and display name for front-end (for now at least)
 	 * @param className
 	 */
 	private void addComponent(final String name, final Class<? extends Linker> className) {
@@ -239,6 +245,45 @@ public enum ExperimentSettings {
 					put("DBP2WD", TranslatorDBpediaToWikidata.class.getName());
 					// Wikidata to DBpedia
 					put("WD2DBP", TranslatorWikidataToDBpedia.class.getName());
+				}
+			});
+
+	/**
+	 * Map assigning evaluator names (strings) to evaluator classes <br>
+	 * <br>
+	 * Note: Primary potential attack vector as reflection is used on these.
+	 * Therefore: restrict access to these maps, among others by making the
+	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
+	 * reference to the modifiable version)
+	 */
+	private static final Map<String, String> evaluatorClasses = Collections
+			.unmodifiableMap(new HashMap<String, String>() {
+				private static final long serialVersionUID = 1L;
+				{
+					// Translators
+
+					// Base evaluator for Precision, Recall, F1
+					put("Base Evaluator (NIF, Precision, Recall, F1)", NIFBaseEvaluator.class.getName());
+				}
+			});
+
+	/**
+	 * Map assigning evaluator names (strings) to evaluator classes <br>
+	 * <br>
+	 * Note: Primary potential attack vector as reflection is used on these.
+	 * Therefore: restrict access to these maps, among others by making the
+	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
+	 * reference to the modifiable version)
+	 */
+	private static final Map<String, String> explainerClasses = Collections
+			.unmodifiableMap(new HashMap<String, String>() {
+				private static final long serialVersionUID = 1L;
+				{
+					// Translators
+
+					// Base evaluator for Precision, Recall, F1
+					put("Explainer based on Precision, Recall and F1 measure.",
+							PrecisionRecallF1Explainer.class.getName());
 				}
 			});
 
@@ -391,6 +436,14 @@ public enum ExperimentSettings {
 	 */
 	public static Collection<? extends String> getFilterNames() {
 		return new HashSet<>(filterClasses.keySet());
+	}
+
+	public static Collection<? extends String> getEvaluatorNames() {
+		return new HashSet<>(evaluatorClasses.keySet());
+	}
+
+	public static Collection<? extends String> getExplainerNames() {
+		return new HashSet<>(explainerClasses.keySet());
 	}
 
 }
