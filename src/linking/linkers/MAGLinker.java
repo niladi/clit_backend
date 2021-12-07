@@ -15,15 +15,22 @@ import java.util.function.BiFunction;
 import org.aksw.gerbil.transfer.nif.Document;
 import org.aksw.gerbil.transfer.nif.Span;
 
-import experiment.PipelineItem;
 import structure.abstractlinker.AbstractLinkerURL;
 import structure.abstractlinker.AbstractLinkerURLPOST;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.utils.LinkerUtils;
-import structure.utils.MentionUtils;
 
+/**
+ * curl --data-urlencode "text='The <entity>University of Leipzig</entity> in <entity>Leipzig</entity>.'" -d type='agdistis' http://akswnc9.informatik.uni-leipzig.de:8113/AGDISTIS
+ * 
+ * view-source:https://agdistis.demos.dice-research.org/
+ * 
+ * 
+ * @author wf7467
+ *
+ */
 public class MAGLinker extends AbstractLinkerURLPOST {
 
 	final String keywordType = "type";
@@ -147,6 +154,7 @@ public class MAGLinker extends AbstractLinkerURLPOST {
 		if (inputText == null) {
 			System.err.println("No input defined");
 		}
+		System.out.println("Annotated text: " + annotatedText);
 		return LinkerUtils.magJSONtoMentions(annotatedText.toString(), inputText, defaultScore);
 	}
 

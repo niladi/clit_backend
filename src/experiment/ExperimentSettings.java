@@ -21,14 +21,12 @@ import clit.translator.TranslatorDBpediaToWikidata;
 import clit.translator.TranslatorWikidataToDBpedia;
 import linking.candidategeneration.DBpediaLookupCandidateGenerator;
 import linking.candidategeneration.WikidataDictCandidateGenerator;
-import linking.linkers.AgnosLinker;
 import linking.linkers.AidaLinker;
 import linking.linkers.BabelfyLinker;
 import linking.linkers.DBpediaSpotlightLinker;
 import linking.linkers.EntityClassifierEULinker;
 import linking.linkers.FOXLinker;
 import linking.linkers.Falcon2Linker;
-import linking.linkers.MAGLinker;
 import linking.linkers.OpenTapiocaLinker;
 import linking.linkers.RadboudLinker;
 import linking.linkers.TagMeLinker;
@@ -88,10 +86,10 @@ public enum ExperimentSettings {
 
 	private ExperimentSettings() {
 		// Add agnos
-		addComponent("Agnos", AgnosLinker.class);
+		// addComponent("Agnos", AgnosLinker.class);
 
 		// AIDA
-		addComponent("AIDA", AidaLinker.class);
+		addComponent("(Unresponsive) AIDA", AidaLinker.class);
 
 		// Babelfy
 		addComponent("Babelfy", BabelfyLinker.class);
@@ -100,10 +98,10 @@ public enum ExperimentSettings {
 		addComponent("DBpediaSpotlight", DBpediaSpotlightLinker.class);
 
 		// EntityClassifierEULinker
-		addComponent("EntityClassifierEULinker", EntityClassifierEULinker.class);
+		addComponent("(Unresponsive) EntityClassifierEULinker", EntityClassifierEULinker.class);
 
 		// FOX
-		addComponent("FOX", FOXLinker.class);
+		addComponent("(Unresponsive) FOX", FOXLinker.class);
 
 		// OpenTapioca
 		addComponent("OpenTapioca", OpenTapiocaLinker.class);
@@ -115,7 +113,7 @@ public enum ExperimentSettings {
 		addComponent("REL", RadboudLinker.class);
 
 		// MAG
-		addComponent("MAG", MAGLinker.class, EnumPipelineType.CG_ED);
+		// addComponent("MAG", MAGLinker.class, EnumPipelineType.CG_ED);
 
 		// TextRazor
 		addComponent("TextRazor", TextRazorLinker.class);
