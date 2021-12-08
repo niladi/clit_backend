@@ -229,11 +229,6 @@
 		<!-- Stanford dependency required for use of NPComplete -->
 		<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
 		<dependency>
-			<groupId>edu.stanford.nlp</groupId>
-			<artifactId>stanford-corenlp</artifactId>
-			<version>3.6.0</version>
-		</dependency>
-		<dependency>
 			<groupId>info.debatty</groupId>
 			<artifactId>java-lsh</artifactId>
 			<version>RELEASE</version>
