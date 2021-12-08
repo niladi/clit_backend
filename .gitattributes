@@ -3,3 +3,4 @@
 labels/* filter=lfs diff=lfs merge=lfs -text
 Babelfy.zip filter=lfs diff=lfs merge=lfs -text
 target/* filter=lfs diff=lfs merge=lfs -text
+/target/clit-0.0.1.jar filter=lfs diff=lfs merge=lfs -text
