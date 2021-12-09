@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
 
@@ -16,6 +17,7 @@ import clit.combiner.IntersectCombiner;
 import clit.combiner.UnionCombiner;
 import clit.eval.NIFBaseEvaluator;
 import clit.eval.explainer.PrecisionRecallF1Explainer;
+import clit.eval.interfaces.Explainer;
 import clit.splitter.CopySplitter;
 import clit.translator.TranslatorDBpediaToWikidata;
 import clit.translator.TranslatorWikidataToDBpedia;
@@ -33,10 +35,15 @@ import linking.linkers.TagMeLinker;
 import linking.linkers.TextRazorLinker;
 import linking.mentiondetection.exact.SpaCyMentionDetector;
 import structure.config.constants.EnumPipelineType;
+import structure.interfaces.clit.Combiner;
+import structure.interfaces.clit.Filter;
+import structure.interfaces.clit.Splitter;
+import structure.interfaces.clit.Translator;
 import structure.interfaces.linker.Linker;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
 import structure.interfaces.pipeline.Disambiguator;
+import structure.interfaces.pipeline.Evaluator;
 import structure.interfaces.pipeline.FullAnnotator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
@@ -47,6 +54,7 @@ public enum ExperimentSettings {
 	// private final HashMap<Linker, Collection<ExperimentType>> mapping = new
 	// HashMap<>();
 	private final Map<String, Collection<EnumPipelineType>> linkerTasktypeMapping = new HashMap<>();
+	private final Map<String, Class<? extends PipelineComponent>> componentClasses = new HashMap<>();
 //	= Collections
 //			.unmodifiableMap(new HashMap<String, Collection<EnumPipelineType>>() {
 //				private static final long serialVersionUID = 1L;
@@ -88,8 +96,8 @@ public enum ExperimentSettings {
 		// Add agnos
 		// addComponent("Agnos", AgnosLinker.class);
 
-		// AIDA
-		addComponent("(Unresponsive) AIDA", AidaLinker.class);
+		// AIDA - unresponsive
+		addComponent("AIDA", AidaLinker.class);
 
 		// Babelfy
 		addComponent("Babelfy", BabelfyLinker.class);
@@ -97,11 +105,11 @@ public enum ExperimentSettings {
 		// DBpediaSpotlight
 		addComponent("DBpediaSpotlight", DBpediaSpotlightLinker.class);
 
-		// EntityClassifierEULinker
-		addComponent("(Unresponsive) EntityClassifierEULinker", EntityClassifierEULinker.class);
+		// EntityClassifierEULinker - unresponsive
+		addComponent("EntityClassifierEULinker", EntityClassifierEULinker.class);
 
-		// FOX
-		addComponent("(Unresponsive) FOX", FOXLinker.class);
+		// FOX - unresponsive
+		addComponent("FOX", FOXLinker.class);
 
 		// OpenTapioca
 		addComponent("OpenTapioca", OpenTapiocaLinker.class);
@@ -174,7 +182,7 @@ public enum ExperimentSettings {
 		}
 
 		if (tasks == null || tasks.size() < 1) {
-			addComponent(name, className, null);
+			addComponent(name, className, (EnumPipelineType[]) null);
 		} else {
 			addComponent(name, className, tasks.toArray(new EnumPipelineType[0]));
 		}
@@ -198,6 +206,8 @@ public enum ExperimentSettings {
 			}
 			linkerTasktypeMapping.put(name, pipelineTypes);
 		}
+
+		componentClasses.put(name, className);
 	}
 
 	boolean containsLinker(EnumPipelineType[] enumPipelineTypes) {
@@ -233,16 +243,16 @@ public enum ExperimentSettings {
 	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
 	 * reference to the modifiable version)
 	 */
-	private static final Map<String, String> translatorClasses = Collections
-			.unmodifiableMap(new HashMap<String, String>() {
+	private static final Map<String, Class<? extends Translator>> translatorClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Translator>>() {
 				private static final long serialVersionUID = 1L;
 				{
 					// Translators
 
 					// DBpedia to Wikidata
-					put("DBP2WD", TranslatorDBpediaToWikidata.class.getName());
+					put("DBP2WD", TranslatorDBpediaToWikidata.class);
 					// Wikidata to DBpedia
-					put("WD2DBP", TranslatorWikidataToDBpedia.class.getName());
+					put("WD2DBP", TranslatorWikidataToDBpedia.class);
 				}
 			});
 
@@ -254,14 +264,14 @@ public enum ExperimentSettings {
 	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
 	 * reference to the modifiable version)
 	 */
-	private static final Map<String, String> evaluatorClasses = Collections
-			.unmodifiableMap(new HashMap<String, String>() {
+	private static final Map<String, Class<? extends Evaluator>> evaluatorClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Evaluator>>() {
 				private static final long serialVersionUID = 1L;
 				{
 					// Translators
 
 					// Base evaluator for Precision, Recall, F1
-					put("Base Evaluator (NIF, Precision, Recall, F1)", NIFBaseEvaluator.class.getName());
+					put("Base Evaluator (NIF, Precision, Recall, F1)", NIFBaseEvaluator.class);
 				}
 			});
 
@@ -273,15 +283,14 @@ public enum ExperimentSettings {
 	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
 	 * reference to the modifiable version)
 	 */
-	private static final Map<String, String> explainerClasses = Collections
-			.unmodifiableMap(new HashMap<String, String>() {
+	private static final Map<String, Class<? extends Explainer>> explainerClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Explainer>>() {
 				private static final long serialVersionUID = 1L;
 				{
 					// Translators
 
 					// Base evaluator for Precision, Recall, F1
-					put("Explainer based on Precision, Recall and F1 measure.",
-							PrecisionRecallF1Explainer.class.getName());
+					put("Explainer based on Precision, Recall and F1 measure.", PrecisionRecallF1Explainer.class);
 				}
 			});
 
@@ -293,29 +302,12 @@ public enum ExperimentSettings {
 	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
 	 * reference to the modifiable version)
 	 */
-	private static final Map<String, String> filterClasses = Collections.unmodifiableMap(new HashMap<String, String>() {
-		private static final long serialVersionUID = 1L;
-		{
-			// Filters
-			// no filter classes yet defined <3
-		}
-	});
-
-	/**
-	 * Map assigning linker names (strings) to linker classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, String> combinerClasses = Collections
-			.unmodifiableMap(new HashMap<String, String>() {
+	private static final Map<String, Class<? extends Filter>> filterClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Filter>>() {
 				private static final long serialVersionUID = 1L;
 				{
-					// combiners: union and intersection
-					put("union", UnionCombiner.class.getName());
-					put("intersection", IntersectCombiner.class.getName());
+					// Filters
+					// no filter classes yet defined <3
 				}
 			});
 
@@ -327,12 +319,30 @@ public enum ExperimentSettings {
 	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
 	 * reference to the modifiable version)
 	 */
-	private static final Map<String, String> splitterClasses = Collections
-			.unmodifiableMap(new HashMap<String, String>() {
+	private static final Map<String, Class<? extends Combiner>> combinerClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Combiner>>() {
+				private static final long serialVersionUID = 1L;
+				{
+					// combiners: union and intersection
+					put("union", UnionCombiner.class);
+					put("intersection", IntersectCombiner.class);
+				}
+			});
+
+	/**
+	 * Map assigning linker names (strings) to linker classes <br>
+	 * <br>
+	 * Note: Primary potential attack vector as reflection is used on these.
+	 * Therefore: restrict access to these maps, among others by making the
+	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
+	 * reference to the modifiable version)
+	 */
+	private static final Map<String, Class<? extends Splitter>> splitterClasses = Collections
+			.unmodifiableMap(new HashMap<String, Class<? extends Splitter>>() {
 				private static final long serialVersionUID = 1L;
 				{
 					// splitters: copy
-					put("copy", CopySplitter.class.getName());
+					put("copy", CopySplitter.class);
 				}
 			});
 
@@ -341,8 +351,8 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, String> getSplitterClassesCaseInsensitive() {
-		final Map<String, String> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+	public static Map<String, Class<? extends Splitter>> getSplitterClassesCaseInsensitive() {
+		final Map<String, Class<? extends Splitter>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(splitterClasses);
 		return retMap;
 	}
@@ -355,7 +365,22 @@ public enum ExperimentSettings {
 	public static Map<String, Class<? extends PipelineComponent>> getLinkerClassesCaseInsensitive() {
 		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(INSTANCE.linkerClasses);
+		retMap.putAll(INSTANCE.translatorClasses);
+		retMap.putAll(INSTANCE.combinerClasses);
+		retMap.putAll(INSTANCE.splitterClasses);
+		retMap.putAll(INSTANCE.filterClasses);
+		retMap.putAll(INSTANCE.evaluatorClasses);
 		return retMap;
+	}
+
+	/**
+	 * Returns a case insensitive copy of an unmodifiable LINKER map
+	 * 
+	 * @return case insensitive map <3
+	 */
+	public static Set<String> getComponentNamesCaseInsensitive() {
+		final Set<String> retSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+		return INSTANCE.linkerTasktypeMapping.keySet();
 	}
 
 	/**
@@ -363,8 +388,8 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, String> getCombinerClassesCaseInsensitive() {
-		final Map<String, String> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+	public static Map<String, Class<? extends Combiner>> getCombinerClassesCaseInsensitive() {
+		final Map<String, Class<? extends Combiner>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(combinerClasses);
 		return retMap;
 	}
@@ -374,8 +399,8 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, String> getTranslatorClassesCaseInsensitive() {
-		final Map<String, String> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+	public static Map<String, Class<? extends Translator>> getTranslatorClassesCaseInsensitive() {
+		final Map<String, Class<? extends Translator>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(translatorClasses);
 		return retMap;
 	}
@@ -385,8 +410,8 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, String> getFilterClassesCaseInsensitive() {
-		final Map<String, String> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+	public static Map<String, Class<? extends Filter>> getFilterClassesCaseInsensitive() {
+		final Map<String, Class<? extends Filter>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(filterClasses);
 		return retMap;
 	}
@@ -442,6 +467,12 @@ public enum ExperimentSettings {
 
 	public static Collection<? extends String> getExplainerNames() {
 		return new HashSet<>(explainerClasses.keySet());
+	}
+
+	public static Map<String, Class<? extends PipelineComponent>> getComponentClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		retMap.putAll(INSTANCE.componentClasses);
+		return retMap;
 	}
 
 }

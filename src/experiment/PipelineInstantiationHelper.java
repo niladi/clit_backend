@@ -35,7 +35,7 @@ public class PipelineInstantiationHelper {
 	protected void instantiateLinkingComponent(final JSONObject jsonPipeline, final EnumModelType knowledgeBase,
 			final Pipeline pipeline, final EnumComponentType linkingComponentType, final String componentId,
 			final String componentValue) throws PipelineException {
-		final Class<? extends PipelineComponent> clazz = ExperimentSettings.getLinkerClassesCaseInsensitive()
+		final Class<? extends PipelineComponent> clazz = ExperimentSettings.getComponentClassesCaseInsensitive()//;//getComponentNamesCaseInsensitive();//.getLinkerClassesCaseInsensitive()
 				.get(componentValue);
 		final boolean useIP;
 		if (clazz == null) {
@@ -45,7 +45,7 @@ public class PipelineInstantiationHelper {
 		}
 
 		if (clazz == null && !useIP) {
-			throw new RuntimeException("No adequate class found nor  it an IP-based component...");
+			throw new RuntimeException("No adequate class found nor is it an IP-based component... ["+componentValue+"]");
 		}
 
 		System.out.println("Linking component type: " + linkingComponentType);
@@ -144,7 +144,7 @@ public class PipelineInstantiationHelper {
 			final EnumComponentType interComponentProcessorType, final String keyStr, final String valueStr)
 			throws PipelineException {
 		try {
-			final String className;
+			final Class<? extends PipelineComponent> className;
 
 			switch (interComponentProcessorType) {
 			case COMBINER:
@@ -203,13 +203,13 @@ public class PipelineInstantiationHelper {
 		}
 	}
 
-	public Filter instantiateFilter(final String className, final String componentId, final String componentValue,
-			final JSONObject jsonPipeline)
+	public Filter instantiateFilter(final Class<? extends PipelineComponent> className, final String componentId,
+			final String componentValue, final JSONObject jsonPipeline)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException, ClassNotFoundException, PipelineException {
 		// normal component
 		if (className != null) {
-			return (Filter) Class.forName(className).getDeclaredConstructor().newInstance();
+			return (Filter) className.getDeclaredConstructor().newInstance();
 		}
 
 		// IP-based API component
@@ -230,13 +230,13 @@ public class PipelineInstantiationHelper {
 				componentId);
 	}
 
-	public Combiner instantiateCombiner(final String className, final String componentId, final String componentValue,
-			final JSONObject jsonPipeline)
+	public Combiner instantiateCombiner(final Class<? extends PipelineComponent> className, final String componentId,
+			final String componentValue, final JSONObject jsonPipeline)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException, ClassNotFoundException, PipelineException {
 		// normal component
 		if (className != null) {
-			return (Combiner) Class.forName(className).getDeclaredConstructor().newInstance();
+			return (Combiner) className.getDeclaredConstructor().newInstance();
 		}
 
 		// IP-based API component
@@ -257,13 +257,13 @@ public class PipelineInstantiationHelper {
 				componentId);
 	}
 
-	public Splitter instantiateSplitter(final String className, final String componentId, final String componentValue,
-			final JSONObject jsonPipeline)
+	public Splitter instantiateSplitter(final Class<? extends PipelineComponent> className, final String componentId,
+			final String componentValue, final JSONObject jsonPipeline)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException, ClassNotFoundException, PipelineException {
 		// normal component
 		if (className != null) {
-			return (Splitter) Class.forName(className).getDeclaredConstructor().newInstance();
+			return (Splitter) className.getDeclaredConstructor().newInstance();
 		}
 
 		// IP-based API component
@@ -284,13 +284,13 @@ public class PipelineInstantiationHelper {
 				componentId);
 	}
 
-	public Translator instantiateTranslator(final String className, final String componentId,
-			final String componentValue, final JSONObject jsonPipeline)
+	public Translator instantiateTranslator(final Class<? extends PipelineComponent> className,
+			final String componentId, final String componentValue, final JSONObject jsonPipeline)
 			throws PipelineException, InstantiationException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		// normal component
 		if (className != null) {
-			return (Translator) Class.forName(className).getDeclaredConstructor().newInstance();
+			return (Translator) className.getDeclaredConstructor().newInstance();
 		}
 
 		// IP-based API component

@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
@@ -29,22 +32,30 @@ public class DBpediaLookupCandidateGenerator extends AbstractCandidateGenerator 
 	public List<PossibleAssignment> generate(Mention mention) throws IOException {
 		final List<PossibleAssignment> candidates;
 		final String urlGET = searchURL + mention.getOriginalMention();
-		final URL url = new URL(urlGET);
-		final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestMethod("GET");
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.connect();
+		URL url;
+		try {
+			url = new URI(urlGET).toURL();
+			final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setDoOutput(true);
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Content-Type", "application/json");
+			conn.connect();
 
-		try (final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-			String line = null;
-			StringBuilder sbCandidates = new StringBuilder();
-			while ((line = br.readLine()) != null) {
-				sbCandidates.append(line);
+			try (final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+				String line = null;
+				StringBuilder sbCandidates = new StringBuilder();
+				while ((line = br.readLine()) != null) {
+					sbCandidates.append(line);
+				}
+				System.out.println(sbCandidates.toString());
+				candidates = extractCandidate(new JSONObject(sbCandidates.toString()));
 			}
-			candidates = extractCandidate(new JSONObject(sbCandidates.toString()));
+			return candidates;
+		} catch (MalformedURLException | URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return candidates;
+		return Lists.newArrayList();
 	}
 
 	/**
