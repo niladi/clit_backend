@@ -53,8 +53,12 @@ public class LauncherEvaluatorTester {
 		// NIF Docs --> load from KORE50
 		final String[] inPathNIFDatasets = new String[] {
 				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\Datasets\\entity_linking\\conll_aida-yago2-dataset\\AIDA-YAGO2-dataset.tsv_nif",
-				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\KORE_50_NIF/KORE_50_DBpedia.ttl" };
-		final String inPathNIFDataset = inPathNIFDatasets[0];
+				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\Datasets\\entity_linking\\KORE_50_NIF/KORE_50_DBpedia.ttl",
+				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\Datasets\\entity_linking\\"+"News-100.ttl",
+				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\Datasets\\entity_linking\\"+"RSS-500.ttl",
+				"C:\\Users\\wf7467\\Desktop\\Evaluation Datasets\\Datasets\\entity_linking\\"+"Reuters-128.ttl"
+		};
+		final String inPathNIFDataset = inPathNIFDatasets[2];
 
 		final List<Linker> linkers = Lists.newArrayList();
 //		linkers.add((new AidaLinker(EnumModelType.DEFAULT));
@@ -88,7 +92,7 @@ public class LauncherEvaluatorTester {
 				return null;
 			}}));
 
-		linkers.add(new RadboudLinker());
+		//linkers.add(new RadboudLinker());
 
 		new LauncherEvaluatorTester().evaluate(inPathNIFDataset, linkers);
 		//executeLinkerOnDocuments(linker, nifDocs);
