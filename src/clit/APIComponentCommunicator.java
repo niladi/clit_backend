@@ -15,24 +15,24 @@ import org.json.simple.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import experiment.PipelineItem;
 import structure.abstractlinker.AbstractLinkerURL;
 import structure.abstractlinker.AbstractLinkerURLPOST;
 import structure.config.kg.EnumModelType;
-import structure.datatypes.APITaskContainer;
 import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.interfaces.clit.Combiner;
 import structure.interfaces.clit.Filter;
 import structure.interfaces.clit.Splitter;
 import structure.interfaces.clit.Translator;
+import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.Disambiguator;
+import structure.interfaces.pipeline.MentionDetector;
 import structure.utils.LinkerUtils;
 
 public class APIComponentCommunicator extends AbstractLinkerURLPOST
-		implements Combiner, Translator, Filter, Splitter, Disambiguator {
+		implements Combiner, Translator, Filter, Splitter, MentionDetector, CandidateGenerator, Disambiguator {
 
 	final URL urlObj;
 	private final String keywordContent = "content";
@@ -106,6 +106,12 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 	// after another.
 	public AnnotatedDocument detect(final AnnotatedDocument input, final String source) throws Exception {
 		return annotate(input);
+	}
+
+	@Override
+	public AnnotatedDocument generate(AnnotatedDocument document) throws IOException {
+		AnnotatedDocument doc = annotate(document);
+		return doc;
 	}
 
 	@Override
@@ -261,5 +267,4 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 		System.out.println("API Call - Translate document");
 		return null;
 	}
-
 }
