@@ -4,10 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
 
 import structure.config.constants.EnumPipelineType;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotatedDocument implements Cloneable, Serializable {
 
 	/**

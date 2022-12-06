@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import structure.interfaces.Scorable;
 import structure.utils.Loggable;
 
@@ -15,6 +17,7 @@ import structure.utils.Loggable;
  * @author Kristian Noullet
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PossibleAssignment implements Scorable, Comparable<PossibleAssignment>, Loggable, Serializable {
 	private static final long serialVersionUID = 1750059899195657325L;
 	private static Logger logger = Logger.getLogger(PossibleAssignment.class);
@@ -24,6 +27,7 @@ public class PossibleAssignment implements Scorable, Comparable<PossibleAssignme
 	// private final String mentionToken;
 	private boolean computedScore = false;
 	private boolean warned = false;
+	public PossibleAssignment() {}
 
 	public static PossibleAssignment createNew(final String assignment// , final String mentionToken
 	) {

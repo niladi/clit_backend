@@ -2,6 +2,8 @@ package structure.datatypes;
 
 import org.json.simple.JSONObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Contains all information required by external IP-based pipeline components (called "Super-JSON" previously).
  * This is what is send to external components and what is expected to be received by external components.
@@ -9,6 +11,7 @@ import org.json.simple.JSONObject;
  * 
  * @author Samuel Printz
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class APITaskContainer {
 
 	private AnnotatedDocument document;

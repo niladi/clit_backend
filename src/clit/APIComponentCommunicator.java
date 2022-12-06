@@ -80,10 +80,9 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 	}
 
 	@Override
-	public AnnotatedDocument disambiguate(final AnnotatedDocument document) throws InterruptedException {
+	public AnnotatedDocument disambiguate(final AnnotatedDocument document) throws InterruptedException, IOException {
 		// TODO Auto-generated method stub
-		System.out.println("API Disambiguate!");
-		return null;
+		return annotate(document);
 	}
 
 //	@Override

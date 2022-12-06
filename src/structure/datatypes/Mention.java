@@ -14,11 +14,12 @@ import org.aksw.gerbil.transfer.nif.ScoredMarking;
 import org.aksw.gerbil.transfer.nif.Span;
 import org.aksw.gerbil.transfer.nif.TypedMarking;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 
 import structure.utils.Loggable;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Mention implements Cloneable, Loggable, Serializable {
 	private static final long serialVersionUID = -2779470073095478510L;
 	protected String mention;
@@ -26,9 +27,10 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	protected int offset = -1;
 	protected double detectionConfidence = -1;
 	protected Collection<PossibleAssignment> possibleAssignments;
-	protected final String originalMention;
-	protected final String originalWithoutStopwords;
+	protected String originalMention;
+	protected String originalWithoutStopwords;
 
+	public Mention() {}
 	public Mention(final String word, final PossibleAssignment assignment, final int offset,
 			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {
 		this(word, new ArrayList<>(Arrays.asList(new PossibleAssignment[] { assignment })), offset, detectionConfidence,
@@ -269,6 +271,10 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	public String getOriginalMention() {
 		return this.originalMention;
 	}
+	
+	public void setOriginalMention(String originalMention) {
+		this.originalMention = originalMention;
+	}
 
 	public void updateOffset(int offset) {
 		this.offset = offset;
@@ -296,6 +302,10 @@ public class Mention implements Cloneable, Loggable, Serializable {
 
 	public String getOriginalWithoutStopwords() {
 		return originalWithoutStopwords;
+	}
+	
+	public void setOriginalWithoutStopwords(String originalWithoutStopwords) {
+		this.originalWithoutStopwords = originalWithoutStopwords;
 	}
 
 	public void setMention(String mention) {
