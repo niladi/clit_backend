@@ -88,7 +88,7 @@ public abstract class AbstractTranslator implements Translator {
 			//
 
 			final Mention translatedMention = new Mention(m);
-			translatedMention.assignTo(translatedAssignment);
+			translatedMention.setAssignment(translatedAssignment);
 			if (TRANSLATE_CANDIDATE_ENTITIES) {
 				translatedMention.updatePossibleAssignments(translatedCandidates);
 			}

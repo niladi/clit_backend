@@ -1,13 +1,17 @@
 package experiment;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import structure.config.constants.EnumPipelineType;
 import structure.datatypes.AnnotatedDocument;
+import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
 import structure.exceptions.PipelineException;
 import structure.interfaces.linker.Linker;
 import structure.interfaces.pipeline.CandidateGenerator;
@@ -15,6 +19,8 @@ import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
 import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
+import structure.utils.datastructure.CandidateUtils;
+import structure.utils.datastructure.MentionUtils;
 
 /**
  * Class acting as a dependency node with details regarding execution and
@@ -44,8 +50,9 @@ public class PipelineItem {
 	private Collection<PipelineItemResultBucket> resultBuckets = Lists.newArrayList();
 
 	private final EnumComponentType type;
-	
-	// Defines which tasks are done (MD, CG and ED) after this item was executed; required for front-end
+
+	// Defines which tasks are done (MD, CG and ED) after this item was executed;
+	// required for front-end
 	private EnumPipelineType pipelineType;
 
 	public PipelineItem(final String id, final PipelineComponent component, final EnumComponentType type,
@@ -72,7 +79,7 @@ public class PipelineItem {
 	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - -
-	// - - - - - - - - - - Dependencies  - - - - - - - - -
+	// - - - - - - - - - - Dependencies - - - - - - - - -
 	// - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 	public Collection<PipelineItem> getDependencies() {
@@ -122,9 +129,11 @@ public class PipelineItem {
 	}
 
 	/**
-	 * Similar to getDependencyResult() this returns the result of the dependencies. Difference is that it validates
-	 * that there is only one dependency and additionally that this single dependency has only one result. This is used
-	 * by all linking components (MD, CG, ED, CG_ED and FULL) that need only one {@link AnnotatedDocument} as input.
+	 * Similar to getDependencyResult() this returns the result of the dependencies.
+	 * Difference is that it validates that there is only one dependency and
+	 * additionally that this single dependency has only one result. This is used by
+	 * all linking components (MD, CG, ED, CG_ED and FULL) that need only one
+	 * {@link AnnotatedDocument} as input.
 	 */
 	private AnnotatedDocument getSingleDependencyResult() {
 		if (getDependencies().size() != 1)
@@ -133,16 +142,15 @@ public class PipelineItem {
 
 		final Collection<AnnotatedDocument> dependencyResult = getDependencyResult();
 		if (dependencyResult.size() != 1)
-			throw new IllegalArgumentException(
-					"Invalid number of arguments passed (" + dependencyResult.size() + ")");
+			throw new IllegalArgumentException("Invalid number of arguments passed (" + dependencyResult.size() + ")");
 
 		return dependencyResult.iterator().next();
 	}
 
 	/**
-	 * Returns a deep copy the result of {@link getSingleDependencyResult()}.
-	 * Used when a pipeline component asks for the result of its dependencies to further process them. The results of
-	 * the previous component must stay unchanged! 
+	 * Returns a deep copy the result of {@link getSingleDependencyResult()}. Used
+	 * when a pipeline component asks for the result of its dependencies to further
+	 * process them. The results of the previous component must stay unchanged!
 	 */
 	public AnnotatedDocument getCopyOfSingleDependencyResult() {
 		return (AnnotatedDocument) getSingleDependencyResult().clone();
@@ -171,9 +179,8 @@ public class PipelineItem {
 		this.targets.add(target);
 	}
 
-
 	// - - - - - - - - - - - - - - - - - - - - - - - -
-	// - - - - - - - - - - - Type  - - - - - - - - - -
+	// - - - - - - - - - - - Type - - - - - - - - - -
 	// - - - - - - - - - - - - - - - - - - - - - - - -
 
 	public EnumComponentType getType() {
@@ -207,7 +214,7 @@ public class PipelineItem {
 	public void setResults(final Collection<AnnotatedDocument> documents) {
 		if (documents != null) {
 			// TODO deep copy? cf. MentionUtils
-			//this.results = DocumentUtils.copyDocuments(documents);
+			// this.results = DocumentUtils.copyDocuments(documents);
 			this.results = documents;
 
 			// Also add the results to the result buckets of the pipeline item. They are the
@@ -312,8 +319,8 @@ public class PipelineItem {
 	}
 
 	/**
-	 * Add to the result documents which steps of the pipeline were already executed (MD, CG, ED) to enable the
-	 * front-end to display the results correctly.
+	 * Add to the result documents which steps of the pipeline were already executed
+	 * (MD, CG, ED) to enable the front-end to display the results correctly.
 	 */
 	private void setPipelineTypeToResultDocuments(Collection<AnnotatedDocument> documents, EnumPipelineType type) {
 		for (AnnotatedDocument document : documents) {
@@ -332,20 +339,49 @@ public class PipelineItem {
 	}
 
 	/**
-	 * Get the result of the previous component (dependency) and execute the mention detection.
-	 * There must be only one dependency (a single previous component) and a single result of this dependency.
+	 * <b>Important Note</b>: This method will ONLY update the MENTIONS of the data
+	 * structure aka. the textual mention along with startOffset etc., but not the
+	 * candidates nor the disambiguated entity<br>
+	 * Get the result of the previous component (dependency) and execute the mention
+	 * detection. There must be only one dependency (a single previous component)
+	 * and a single result of this dependency.<br>
 	 */
 	private Collection<AnnotatedDocument> md() throws Exception {
 		if (!EnumComponentType.MD.isInstance(getComponent()))
 			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
 
+		// Grab a copy to not overwrite the original
 		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
+		// Get the mention detector component
 		final MentionDetector mentionDetector = (MentionDetector) getComponent();
-		return mentionDetector.detect(document).makeMultiDocuments();
+		final AnnotatedDocument documentMentionDetection = mentionDetector.detect(document);
+
+		// Two different ways we can understand the default behaviour...
+		// Either simply keep the old ones and add new detected ones to it (if they are
+		// the same mention, simply keep the old one)
+		// OR: take the new mentions as reference and only keep the old ones for which a
+		// new corresponding one exists
+		final boolean ADDNEW_OR_REMOVENOTNEWLYDETECTEDPLUSADDNEW = true;
+
+		if (ADDNEW_OR_REMOVENOTNEWLYDETECTEDPLUSADDNEW) {
+			final Collection<Mention> newTextMentions = MentionUtils.unionAndKeepOldReferences(document.getMentions(),
+					documentMentionDetection.getMentions());
+
+			// Make sure MD only overwrites mentions in terms of start/end
+			document.setMentions(newTextMentions);
+		} else {
+			final Collection<Mention> newTextMentions = MentionUtils.intersectAndAddNew(document.getMentions(),
+					documentMentionDetection.getMentions());
+			document.setMentions(newTextMentions);
+		}
+
+		return document.makeMultiDocuments();
 	}
 
 	/**
-	 * TODO
+	 * <b>Important Note</b>: This method will ONLY update the candidates (aka.
+	 * possible assignments) for a given mention. If the mention passed does not
+	 * exist that these candidates belong to, they are IGNORED.
 	 */
 	private Collection<AnnotatedDocument> cg() throws Exception {
 		if (!EnumComponentType.CG.isInstance(getComponent()))
@@ -353,26 +389,37 @@ public class PipelineItem {
 
 		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
 		final CandidateGenerator candidateGenerator = (CandidateGenerator) getComponent();
-		return candidateGenerator.generate(document).makeMultiDocuments();
+		final AnnotatedDocument docNewCandidates = candidateGenerator.generate(document);
+
+		// Updates candidates in "document" variable with the candidates from
+		// docNewCandidates
+		// Add the new candidates to the input document
+		// Note that 2 candidates may be merged in different ways (e.g. score max or
+		// score avg)
+		CandidateUtils.mergeDocumentCandidates(document, docNewCandidates);
+
+		return document.makeMultiDocuments();
 	}
 
 	/**
-	 * TODO
+	 * <b>Note on Assumption</b>: Everything may be overwritten due to entire
+	 * pipeline being made up of it
 	 */
 	private Collection<AnnotatedDocument> md_cg_ed() throws Exception {
 		if (!EnumComponentType.MD_CG_ED.isInstance(getComponent()))
 			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
 
 		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
-		//final FullAnnotator fullAnnotator = (FullAnnotator) getComponent();
-		//return fullAnnotator.annotate(document).makeMultiDocuments();
+		// final FullAnnotator fullAnnotator = (FullAnnotator) getComponent();
+		// return fullAnnotator.annotate(document).makeMultiDocuments();
 		final Linker linker = (Linker) getComponent();
 		return linker.annotate(document).makeMultiDocuments();
 	}
 
 	/**
 	 * TODO
-	 * @throws Exception 
+	 * 
+	 * @throws Exception
 	 */
 	private Collection<AnnotatedDocument> cg_ed() throws Exception {
 		if (!EnumComponentType.CG_ED.isInstance(getComponent()))
@@ -384,7 +431,7 @@ public class PipelineItem {
 	}
 
 	/**
-	 * TODO
+	 * <b>Note</b>: Only chosen entity may be updated through this method
 	 */
 	private Collection<AnnotatedDocument> ed() throws Exception {
 		if (!EnumComponentType.ED.isInstance(getComponent()))
@@ -392,7 +439,75 @@ public class PipelineItem {
 
 		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
 		final Disambiguator disambiguator = (Disambiguator) getComponent();
-		return disambiguator.disambiguate(document).makeMultiDocuments();
+		final AnnotatedDocument docDisambiguated = disambiguator.disambiguate(document);
+
+		//
+		final Map<String, Mention> mapExistingMentions = new HashMap<>();
+		for (Mention existingMention : document.getMentions()) {
+			final String mentionStr = MentionUtils.mentionToUniqueStr(existingMention);
+			mapExistingMentions.put(mentionStr, existingMention);
+		}
+
+		for (Mention newMention : docDisambiguated.getMentions()) {
+			final String mentionStr = MentionUtils.mentionToUniqueStr(newMention);
+			final Mention existingMention;
+			final PossibleAssignment newAssignment = newMention.getAssignment();
+			if ((existingMention = mapExistingMentions.get(mentionStr)) != null) {
+				// Found matching mentions!
+
+				if (newAssignment == null || newAssignment.getAssignment() == null
+						|| newAssignment.getAssignment().length() == 0) {
+					// Empty new assignment for found mention --> ignore new disambiguated entity
+					// Keep the old assignment on
+					// existingMention.setAssignment(existingMention.getAssignment());
+					continue;
+				}
+
+				// go through all possible assignments, if the assigned one is not part of it,
+				// add it
+				// else just set it as the wanted assignment
+
+				// Should a disambiguated (found) entity have to be part of the possible
+				// assignments?
+				// IGNORE_WHETHER_IN_POSSIBLE_CANDIDATES==TRUE --> Nope.
+				// IGNORE_WHETHER_IN_POSSIBLE_CANDIDATES==FALSE --> Yes, it has to be part of
+				// the possible
+				// assignments
+				final boolean IGNORE_WHETHER_IN_POSSIBLE_CANDIDATES = true;
+				if (IGNORE_WHETHER_IN_POSSIBLE_CANDIDATES) {
+					// We ignore whether an assignment is part of the candidates, so we just set it
+					existingMention.setAssignment(newMention.getAssignment());
+				} else {
+					boolean candidateFound = false;
+					for (PossibleAssignment candidate : existingMention.getPossibleAssignments()) {
+						if (candidate == null || candidate.getAssignment() == null)
+							continue;
+
+						if (candidate.getAssignment().equals(newAssignment.getAssignment())) {
+							candidateFound = true;
+							break;
+						}
+					}
+
+					if (!candidateFound) {
+						// Candidate not yet in existing possible assignments, so... we're not setting
+						// it as a new one, move on to next one.
+						continue;
+					} else {
+						existingMention.setAssignment(newMention.getAssignment());
+					}
+				}
+			} else {
+				// Clause will be cleaned by compiler, but here some reasoning behind the
+				// behaviour for maintainability purposes
+				//
+				// Ignored: Disambiguated entities generated by component which do not have a
+				// possible mention detected via prior mention detection
+				// --> TODO: only for MD+CG/MD+CG+ED combined should it not be ignored
+			}
+		}
+
+		return document.makeMultiDocuments();
 	}
 
 	/**

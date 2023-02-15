@@ -176,7 +176,7 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	 * 
 	 * @param assignment
 	 */
-	public void assignTo(final PossibleAssignment assignment) {
+	public void setAssignment(final PossibleAssignment assignment) {
 		this.assignment = assignment;
 	}
 
@@ -196,7 +196,7 @@ public class Mention implements Cloneable, Loggable, Serializable {
 		}
 		Collections.sort(listAssignments, Comparator.reverseOrder());
 		if (listAssignments.size() > 0) {
-			assignTo(listAssignments.get(0));
+			setAssignment(listAssignments.get(0));
 		}
 	}
 
@@ -297,7 +297,7 @@ public class Mention implements Cloneable, Loggable, Serializable {
 					"Consistency error. Both mentions should have the same mention token in order to copy disambiguation results.");
 		}
 		updatePossibleAssignments(fromMention.getPossibleAssignments());
-		assignTo(fromMention.getAssignment());
+		setAssignment(fromMention.getAssignment());
 	}
 
 	public String getOriginalWithoutStopwords() {

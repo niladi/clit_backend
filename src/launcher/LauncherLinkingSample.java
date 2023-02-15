@@ -11,7 +11,7 @@ import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.MentionDetector;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public class LauncherLinkingSample {
 

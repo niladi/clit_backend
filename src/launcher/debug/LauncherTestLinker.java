@@ -41,7 +41,7 @@ import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.utils.LinkerUtils;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 /**
  * This was for testing combinations of different linkers. The interfaces are deprecated since 29.10.2021 and were not

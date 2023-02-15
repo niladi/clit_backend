@@ -17,7 +17,7 @@ import linking.disambiguation.scorers.embedhelp.EntitySimilarityService;
 import linking.disambiguation.scorers.pagerank.PageRankLoader;
 import structure.config.constants.Comparators;
 import structure.datatypes.Mention;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 /**
  * This cluster item picker serves to continuously call HillClimbingPicker,

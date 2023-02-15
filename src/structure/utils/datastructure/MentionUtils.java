@@ -1,4 +1,4 @@
-package structure.utils;
+package structure.utils.datastructure;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,6 +67,7 @@ public class MentionUtils {
 
 	/**
 	 * Creates a Collection<Collection<Mention>> from Collection<Mention>
+	 * 
 	 * @param mention
 	 * @return
 	 */
@@ -289,8 +293,9 @@ public class MentionUtils {
 	/**
 	 * Restrict a list of mentions to the mentions of another list of mentions
 	 * 
-	 * @param baseMentions List of mentions that should be filtered
-	 * @param filterMentions List of mentions to which baseMentions should be restricted
+	 * @param baseMentions   List of mentions that should be filtered
+	 * @param filterMentions List of mentions to which baseMentions should be
+	 *                       restricted
 	 * @return The filtered list of mentions
 	 */
 	public static Collection<Mention> filterMentionsByMentions(Collection<Mention> baseMentions,
@@ -303,13 +308,129 @@ public class MentionUtils {
 		for (Mention baseMention : baseMentions) {
 			String mentionText = baseMention.getMention();
 			for (Mention filterMention : filterMentions) {
-				if (filterMention.getOriginalMention().equals(mentionText) &&
-						baseMention.getOffset() == filterMention.getOffset()) {
-					//baseMention.setOffset(filterMention.getOffset());
+				if (filterMention.getOriginalMention().equals(mentionText)
+						&& baseMention.getOffset() == filterMention.getOffset()) {
+					// baseMention.setOffset(filterMention.getOffset());
 					resultMentions.add(baseMention);
 				}
 			}
 		}
 		return resultMentions;
 	}
+
+	/**
+	 * Considered as "strict" mention detection <br>
+	 * Means we overwrite existing list of mentions with new mentions if no
+	 * corresponding one exists and keep old ones that are found by the new
+	 * system<br>
+	 * We keep the references to the old ones that we have found and add a
+	 * text-mention for the new ones, but we remove the old ones that are not
+	 * referenced by the new list of mentions
+	 * 
+	 * @param oldMentions
+	 * @param newMentions
+	 * @return
+	 */
+	public static Collection<Mention> intersectAndAddNew(final Collection<Mention> oldMentions,
+			final Collection<Mention> newMentions) {
+		final Collection<Mention> newTextMentions = Lists.newArrayList();
+
+		// Do an intersection between old and new mentions and then add the newly found
+		// ones
+		final Map<String, Mention> mapOldMentions = new HashMap<>();
+		for (Mention mention : oldMentions) {
+			final String key = mentionToUniqueStr(mention);
+			mapOldMentions.put(key, mention);
+		}
+
+		for (Mention newMention : newMentions) {
+			final String key = mentionToUniqueStr(newMention);
+			final Mention val;
+			if ((val = mapOldMentions.get(key)) != null) {
+				// Add existing mention that was also found by MD
+				newTextMentions.add(val);
+			} else {
+				// Add mention that was newly found by MD
+				newTextMentions.add(createTextOnlyMention(newMention));
+			}
+		}
+
+		return newTextMentions;
+	}
+
+	/**
+	 * 
+	 * @param newMentions mentions from which new possibilities for mentions may
+	 *                    emerge
+	 * @param oldMentions mentions we have as a base - newMentions may contain
+	 *                    entries already within these
+	 * @return the old mentions along with new mentions which did not exist yet
+	 *         within the old mentions list
+	 */
+	public static Collection<Mention> unionAndKeepOldReferences(final Collection<Mention> oldMentions,
+			final Collection<Mention> newMentions) {
+
+		final Collection<Mention> retMentions = Lists.newArrayList();
+
+		// Use set logic on text properties whether it's a new one or it exists
+		final Set<String> mentionStrings = new HashSet<>();
+		for (final Mention mention : oldMentions) {
+			final String mentionStr = mentionToUniqueStr(mention);
+			retMentions.add(mention);
+			mentionStrings.add(mentionStr);
+		}
+
+		for (final Mention mention : newMentions) {
+			final String mentionStr = mentionToUniqueStr(mention);
+			if (!mentionStrings.contains(mentionStr)) {
+				// current mention doesn't exist yet
+				// so let's add it to the current list of mentions
+				final Mention newTextMention = createTextOnlyMention(mention);
+				retMentions.add(newTextMention);
+			}
+		}
+		return retMentions;
+	}
+
+	/**
+	 * Creates a mention only with textual content aka. no assignment nor possible
+	 * assignments
+	 * 
+	 * @param mention
+	 * @return
+	 */
+	private static Mention createTextOnlyMention(Mention mention) {
+		return new Mention(mention.getMention(), (PossibleAssignment) null, mention.getOffset(),
+				mention.getDetectionConfidence(), mention.getOriginalMention(), mention.getOriginalWithoutStopwords());
+	}
+
+	/**
+	 * Main intent: for mention detection mention comparison, it should act as a
+	 * kind of "hash" <br>
+	 * Note: Ignores assignments. </br>
+	 * 
+	 * @param mention
+	 * @return
+	 */
+	public static String mentionToUniqueStr(final Mention mention) {
+		if (mention == null) {
+			return "mention_null";
+		}
+
+		final String mentionText = mention.getMention();
+		final String mentionOrigText = mention.getOriginalMention();
+		final String mentionOrigNoStopwordsText = mention.getOriginalWithoutStopwords();
+		final String mentionOffset = String.valueOf(mention.getOffset());
+
+		final StringBuilder setText = new StringBuilder();
+		setText.append(mentionText == null ? "_" : mentionText);
+		setText.append("_");
+		setText.append(mentionOrigText == null ? "_" : mentionText);
+		setText.append("_");
+		setText.append(mentionOrigNoStopwordsText == null ? "_" : mentionText);
+		setText.append("_");
+		setText.append(mentionOffset);
+		return setText.toString();
+	}
+
 }

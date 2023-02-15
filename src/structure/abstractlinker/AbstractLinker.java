@@ -12,7 +12,7 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.interfaces.clit.Translator;
 import structure.interfaces.linker.Linker;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public abstract class AbstractLinker implements Linker {
 	private static AtomicLong counter = new AtomicLong(0);

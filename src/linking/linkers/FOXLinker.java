@@ -18,7 +18,7 @@ import structure.datatypes.Mention;
 import structure.interfaces.linker.LinkerNIF;
 import structure.utils.FunctionUtils;
 import structure.utils.LinkerUtils;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public class FOXLinker extends AbstractLinkerURLPOST implements LinkerNIF {
 	public Number defaultScore = 0.5d;// 1.0d// getWeight()

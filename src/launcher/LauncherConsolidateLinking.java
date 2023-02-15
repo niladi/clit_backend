@@ -14,7 +14,7 @@ import linking.linkers.OpenTapiocaLinker;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;
 import structure.interfaces.linker.Linker;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public class LauncherConsolidateLinking {
 

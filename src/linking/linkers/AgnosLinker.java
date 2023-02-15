@@ -16,8 +16,8 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.utils.DetectionUtils;
 import structure.utils.Loggable;
-import structure.utils.MentionUtils;
 import structure.utils.Stopwatch;
+import structure.utils.datastructure.MentionUtils;
 
 public class AgnosLinker extends AbstractLinkerLocal {
 

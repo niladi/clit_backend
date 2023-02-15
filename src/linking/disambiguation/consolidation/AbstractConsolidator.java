@@ -25,7 +25,7 @@ import structure.datatypes.PossibleAssignment;
 import structure.interfaces.linker.Linker;
 import structure.utils.FunctionUtils;
 import structure.utils.Loggable;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public abstract class AbstractConsolidator implements Consolidator, Loggable {
 

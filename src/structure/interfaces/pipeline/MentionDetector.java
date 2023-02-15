@@ -9,7 +9,7 @@ import com.github.jsonldjava.shaded.com.google.common.collect.Lists;
 
 import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
-import structure.utils.MentionUtils;
+import structure.utils.datastructure.MentionUtils;
 
 public interface MentionDetector extends PipelineComponent {
 	public boolean init() throws Exception;
