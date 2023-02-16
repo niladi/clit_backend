@@ -13,6 +13,7 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.exceptions.PipelineException;
+import structure.interfaces.clit.Combiner;
 import structure.interfaces.linker.Linker;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
@@ -273,6 +274,10 @@ public class PipelineItem {
 					// System.out.println("Exec type: " + getType());
 					EnumComponentType type = getType();
 					switch (type) {
+					case INPUT:
+					case OUTPUT:
+						results = getComponent().execute(this, document);
+						break;
 					case MD:
 						results = md();
 						break;
@@ -288,16 +293,20 @@ public class PipelineItem {
 					case MD_CG_ED:
 						results = md_cg_ed();
 						break;
-					case INPUT:
-					case OUTPUT:
-						results = getComponent().execute(this, document);
-						break;
 					case COMBINER:
-					case UNSPECIFIED:
-					case FILTER:
+						results = combine();
+						break;
 					case SPLITTER:
-					case TRANSFORMER:
+						results = split();
+						break;
+					case FILTER:
+						results = filter();
+						break;
 					case TRANSLATOR:
+						results = translate();
+						break;
+					case TRANSFORMER:
+					case UNSPECIFIED:
 					default:
 						// System.out.println("DEFAULT CASE: Specific execution.");
 						results = getComponent().execute(this, document);
@@ -316,6 +325,41 @@ public class PipelineItem {
 			finished();
 			// System.out.println("[" + getID() + "] Finished - Result: " + getResults());
 		}
+	}
+
+	private Collection<AnnotatedDocument> translate() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private Collection<AnnotatedDocument> filter() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private Collection<AnnotatedDocument> split() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Added generic combiner functionality (not via execute()).
+	 * 
+	 * @return
+	 */
+	private Collection<AnnotatedDocument> combine() {
+
+		if (!EnumComponentType.COMBINER.isInstance(getComponent()))
+			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
+
+		// Grab a copy to not overwrite the original
+		final Collection<AnnotatedDocument> documents = getCopyOfAllDependencyResults();
+
+		// Get the mention detector component
+		final Combiner combiner = (Combiner) getComponent();
+		final AnnotatedDocument document = combiner.combine(documents);
+
+		return document.makeMultiDocuments();
 	}
 
 	/**
