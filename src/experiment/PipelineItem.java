@@ -377,7 +377,14 @@ public class PipelineItem {
 
 		// Get the mention detector component
 		final Splitter splitter = (Splitter) getComponent();
-		final Collection<AnnotatedDocument> documents = splitter.split(document);
+		final Collection<AnnotatedDocument> documents = splitter.split(document, getTargets().size());
+
+		// Safety mechanism --> splitter should give us getTargets().size() number of
+		// documents
+		if (documents.size() != getTargets().size()) {
+			throw new RuntimeException("Invalid number of documents returned by split (Expected: " + getTargets().size()
+					+ "; Received: " + documents.size() + ")");
+		}
 
 		return documents;
 	}
