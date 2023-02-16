@@ -8,15 +8,24 @@ import java.net.ProtocolException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.function.BiFunction;
+
 
 import org.json.simple.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import experiment.PipelineItem;
+import opennlp.tools.coref.Linker;
 import structure.abstractlinker.AbstractLinkerURL;
 import structure.abstractlinker.AbstractLinkerURLPOST;
 import structure.config.kg.EnumModelType;
@@ -127,24 +136,45 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 
 	@Override
 	public Collection<AnnotatedDocument> split(final AnnotatedDocument document) {
-		// TODO Auto-generated method stub
-		System.out.println("API Split #1!");
-		return null;
+		return split(document, 2);
 	}
 
 	@Override
 	public Collection<AnnotatedDocument> split(final AnnotatedDocument documentToSplit, final int copies) {
 		// TODO Auto-generated method stub
-		System.out.println("API Split #2!");
-		return null;
+		return split(documentToSplit, copies, null);
 	}
 
 	@Override
 	public Collection<AnnotatedDocument> split(final AnnotatedDocument documentToSplit, final int copies,
 			final String[] params) {
-		// TODO Auto-generated method stub
-		System.out.println("API Split #3!");
-		return null;
+		System.out.println("API Split called! [copies: " + copies + ", params:"
+				+ (params == null ? "null" : Arrays.toString(params)) + "]");
+		String request;
+		ArrayList<AnnotatedDocument> splitDocuments = new ArrayList<AnnotatedDocument>();
+		try {
+			request = LinkerUtils.documentToAPIJSON(documentToSplit, pipelineConfig, componentId);
+
+			// send request
+			final String response = sendRequest(request);
+
+			// TODO: transform response into Collection<AnnotatedDocument>
+			// e.g. split the string "somehow" into multiple documents
+			// For each document, call: LinkerUtils.apiJSONToDocument
+
+			// Aggregate these into a collection (e.g. arraylist)
+
+			// TODO: Return Collection<AnnotatedDocument>
+		    final org.json.JSONObject responseAsJson = new org.json.JSONObject(response);
+		    org.json.JSONArray documents = responseAsJson.getJSONArray("documents");
+		    for (int i = 0; i < documents.length(); i++) {
+				splitDocuments.add(LinkerUtils.apiJSONToDocument(documents.getJSONObject(i).toString()));
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return splitDocuments;
 	}
 
 	@Override
