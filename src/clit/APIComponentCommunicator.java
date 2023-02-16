@@ -108,6 +108,18 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 	}
 
 	@Override
+	public AnnotatedDocument translate(AnnotatedDocument input) {
+		System.out.println("API Call - Translate document");
+		return null;
+	}
+
+	@Override
+	public AnnotatedDocument filter(AnnotatedDocument document) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public AnnotatedDocument generate(AnnotatedDocument document) throws IOException {
 		AnnotatedDocument doc = annotate(document);
 		return doc;
@@ -258,12 +270,6 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 		}
 
 		getLogger().error("No parameter passed to POST request...");
-		return null;
-	}
-
-	@Override
-	public AnnotatedDocument translate(AnnotatedDocument input) {
-		System.out.println("API Call - Translate document");
 		return null;
 	}
 }

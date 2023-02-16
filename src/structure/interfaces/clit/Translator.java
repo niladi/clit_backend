@@ -1,7 +1,5 @@
 package structure.interfaces.clit;
 
-import java.util.Collection;
-
 import structure.datatypes.AnnotatedDocument;
 
 public interface Translator extends Subcomponent {

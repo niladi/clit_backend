@@ -14,7 +14,9 @@ import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.exceptions.PipelineException;
 import structure.interfaces.clit.Combiner;
+import structure.interfaces.clit.Filter;
 import structure.interfaces.clit.Splitter;
+import structure.interfaces.clit.Translator;
 import structure.interfaces.linker.Linker;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
@@ -329,15 +331,43 @@ public class PipelineItem {
 	}
 
 	private Collection<AnnotatedDocument> translate() {
-		// TODO Auto-generated method stub
-		return null;
+		if (!EnumComponentType.TRANSLATOR.isInstance(getComponent()))
+			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
+
+		// Grab a copy to not overwrite the original
+		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
+
+		// Get the mention detector component
+		final Translator translator = (Translator) getComponent();
+		final AnnotatedDocument translatedDocument = translator.translate(document);
+
+		return translatedDocument.makeMultiDocuments();
 	}
 
+	/**
+	 * Added generic filter functionality (not via execute()).
+	 * 
+	 * @return filter document
+	 */
 	private Collection<AnnotatedDocument> filter() {
-		// TODO Auto-generated method stub
-		return null;
+		if (!EnumComponentType.FILTER.isInstance(getComponent()))
+			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
+
+		// Grab a copy to not overwrite the original
+		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
+
+		// Get the mention detector component
+		final Filter filter = (Filter) getComponent();
+		final AnnotatedDocument filterDocument = filter.filter(document);
+
+		return filterDocument.makeMultiDocuments();
 	}
 
+	/**
+	 * Added generic splitter functionality (not via execute()).
+	 * 
+	 * @return split document
+	 */
 	private Collection<AnnotatedDocument> split() {
 		if (!EnumComponentType.SPLITTER.isInstance(getComponent()))
 			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
@@ -355,7 +385,7 @@ public class PipelineItem {
 	/**
 	 * Added generic combiner functionality (not via execute()).
 	 * 
-	 * @return
+	 * @return combined document
 	 */
 	private Collection<AnnotatedDocument> combine() {
 
