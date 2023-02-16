@@ -14,6 +14,7 @@ import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 import structure.exceptions.PipelineException;
 import structure.interfaces.clit.Combiner;
+import structure.interfaces.clit.Splitter;
 import structure.interfaces.linker.Linker;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
@@ -338,8 +339,17 @@ public class PipelineItem {
 	}
 
 	private Collection<AnnotatedDocument> split() {
-		// TODO Auto-generated method stub
-		return null;
+		if (!EnumComponentType.SPLITTER.isInstance(getComponent()))
+			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
+
+		// Grab a copy to not overwrite the original
+		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
+
+		// Get the mention detector component
+		final Splitter splitter = (Splitter) getComponent();
+		final Collection<AnnotatedDocument> documents = splitter.split(document);
+
+		return documents;
 	}
 
 	/**
