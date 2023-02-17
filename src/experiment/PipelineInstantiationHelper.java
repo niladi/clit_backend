@@ -41,7 +41,8 @@ public class PipelineInstantiationHelper implements Loggable {
 				.get(componentValue);
 		final Class<? extends PipelineComponent> clazz = ExperimentSettings.getComponentClassesCaseInsensitive()// ;//getComponentNamesCaseInsensitive();//.getLinkerClassesCaseInsensitive()
 				.get(componentValue);
-		final boolean isValidIP = isIPBasedComponent(componentValue);
+		System.out.println("Component Value: " + componentValue);
+		boolean isValidIP = isIPBasedComponent(componentValue);
 
 		if (clazz == null && !isValidIP) {
 			throw new RuntimeException(
@@ -52,9 +53,12 @@ public class PipelineInstantiationHelper implements Loggable {
 		final boolean useAPICommunicator;
 		if (clazz != null && APIComponent.class.isAssignableFrom(clazz)) {
 			// It's an API component
-			useAPICommunicator = isValidIP;
+			System.out.println("It's an API component!");
+			// in this case componentValue will be the display name of the APIComponent
+			useAPICommunicator = true;
 			APIComponent apiComponent = ((APIComponent) apiComponentInstance);
 			apiURLStr = apiComponent.getUrlString();
+			isValidIP = isIPBasedComponent(apiURLStr);
 		} else {
 			apiURLStr = componentValue;
 			useAPICommunicator = (clazz == null) && isValidIP;
@@ -65,6 +69,9 @@ public class PipelineInstantiationHelper implements Loggable {
 			switch (linkingComponentType) {
 			case MD:
 				final MentionDetector mentionDetector;
+				System.out.println("isValidIP: " + isValidIP);
+				System.out.println("useAPI: " + useAPICommunicator);
+
 				if (isValidIP && useAPICommunicator) {
 					// Use IP to communicate with a MD API
 					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,

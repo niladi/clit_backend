@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import com.google.common.collect.Lists;
 
 import clit.APIComponent;
+import clit.APIPropertyLoader;
 import clit.combiner.IntersectCombiner;
 import clit.combiner.UnionCombiner;
 import clit.eval.NIFBaseEvaluator;
@@ -36,7 +37,6 @@ import linking.linkers.TagMeLinker;
 import linking.linkers.TextRazorLinker;
 import linking.mentiondetection.exact.SpaCyMentionDetector;
 import structure.config.constants.EnumPipelineType;
-import structure.datatypes.AnnotatedDocument;
 import structure.interfaces.clit.Combiner;
 import structure.interfaces.clit.Filter;
 import structure.interfaces.clit.Splitter;
@@ -144,16 +144,14 @@ public enum ExperimentSettings {
 		// Load CLiT API components from the properties files
 		// for each of them instantiate an APIComponent which will then be used by
 		// APIComponentCommunicator to actually communicate with it
-		final APIComponent apiComponent = new APIComponent("google.com", "Test linker...") {
+		final APIPropertyLoader propertyLoader = new APIPropertyLoader();
+		final Collection<APIComponent> apiComponents = propertyLoader.load();
+		System.out.println("Adding components: " + apiComponents.size());
+		for (APIComponent apiComponent : apiComponents) {
+			System.out.println("Adding API Component: " + apiComponent.getDisplayName());
+			addAPIComponent(apiComponent, apiComponent.getTasks().toArray(new EnumPipelineType[] {}));
+		}
 
-			@Override
-			public Collection<AnnotatedDocument> execute(PipelineItem callItem, AnnotatedDocument document)
-					throws Exception {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		};
-		addAPIComponent(apiComponent, EnumPipelineType.MD);
 	}
 
 	/**
@@ -212,9 +210,10 @@ public enum ExperimentSettings {
 			}
 			// Allows task-specific grouping of components
 			linkerTasktypeMapping.put(apiComponent.getDisplayName(), pipelineTypes);
+
+			// Add it to the "normal" components
+			componentClasses.put(apiComponent.getDisplayName(), APIComponent.class);
 		}
-		// Add it to the "normal" components
-		componentClasses.put(apiComponent.getDisplayName(), APIComponent.class);
 
 		// Keep track of this specific API component
 		apiComponentClasses.put(apiComponent.getDisplayName(), apiComponent);
