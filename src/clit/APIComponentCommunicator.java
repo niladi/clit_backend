@@ -112,13 +112,37 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 
 	@Override
 	public AnnotatedDocument translate(AnnotatedDocument input) {
-		System.out.println("API Call - Translate document");
+		System.out.println("API Filter called! ");
+		String request;
+		try {
+			request = LinkerUtils.documentToAPIJSON(input, pipelineConfig, componentId);
+
+			// send request
+			final String response = sendRequest(request);
+
+			return LinkerUtils.apiJSONToDocument(response);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 
 	@Override
 	public AnnotatedDocument filter(AnnotatedDocument document) {
-		// TODO Auto-generated method stub
+		System.out.println("API Filter called! ");
+		String request;
+		try {
+			request = LinkerUtils.documentToAPIJSON(document, pipelineConfig, componentId);
+
+			// send request
+			final String response = sendRequest(request);
+
+			return LinkerUtils.apiJSONToDocument(response);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 
