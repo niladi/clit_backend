@@ -21,7 +21,7 @@ public class APIPropertyLoader {
 	}
 
 	public APIPropertyLoader() {
-		this("C:\\Users\\wf7467\\Desktop\\GitHub\\kmdn\\combining_linking_techniques\\properties");
+		this("/clit/properties");
 	}
 
 	public Collection<APIComponent> load() {

@@ -55,6 +55,7 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 			final JSONObject pipelineConfig) throws MalformedURLException {
 		super(KG);
 		this.urlObj = new URL(urlStr);
+		System.out.println(urlObj);
 		this.pipelineConfig = pipelineConfig;
 		this.componentId = componentId;
 		init();

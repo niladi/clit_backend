@@ -374,11 +374,12 @@ public class MentionUtils {
 
 		// Use set logic on text properties whether it's a new one or it exists
 		final Set<String> mentionStrings = new HashSet<>();
-		for (final Mention mention : oldMentions) {
-			final String mentionStr = mentionToUniqueStr(mention);
-			retMentions.add(mention);
-			mentionStrings.add(mentionStr);
-		}
+		if(oldMentions != null) 
+          for (final Mention mention : oldMentions) {
+            final String mentionStr = mentionToUniqueStr(mention);
+            retMentions.add(mention);
+            mentionStrings.add(mentionStr);
+          }
 
 		for (final Mention mention : newMentions) {
 			final String mentionStr = mentionToUniqueStr(mention);
