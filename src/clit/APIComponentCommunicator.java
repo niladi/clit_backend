@@ -11,7 +11,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+<<<<<<< HEAD
 import java.util.function.BiFunction;
+=======
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+>>>>>>> a906834c95a5468d165e5bef929449f33210717d
 
 import org.json.simple.JSONObject;
 
@@ -151,13 +159,6 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 			// send request
 			final String response = sendRequest(request);
 
-			// TODO: transform response into Collection<AnnotatedDocument>
-			// e.g. split the string "somehow" into multiple documents
-			// For each document, call: LinkerUtils.apiJSONToDocument
-
-			// Aggregate these into a collection (e.g. arraylist)
-
-			// TODO: Return Collection<AnnotatedDocument>
 		    final org.json.JSONObject responseAsJson = new org.json.JSONObject(response);
 		    org.json.JSONArray documents = responseAsJson.getJSONArray("documents");
 		    for (int i = 0; i < documents.length(); i++) {
@@ -179,9 +180,34 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 
 	@Override
 	public AnnotatedDocument combine(Collection<AnnotatedDocument> multiItems) {
-		// TODO Auto-generated method stub
-		System.out.println("API Combine!");
-		return null;
+		System.out.println("API Combine called! [number of items to combine: " + multiItems.size());
+		AnnotatedDocument combinedDocument = null;
+		try {
+
+		    String documentsAsJson = "[" + multiItems.stream().map((AnnotatedDocument doc) -> 
+		    	{
+					try {
+						return LinkerUtils.documentToAPIJSON(doc, pipelineConfig, componentId);
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
+					return null;
+				}
+		    ).collect(Collectors.joining(", ")) + "]";
+		    System.out.println(documentsAsJson);
+			// send request
+		    final org.json.JSONObject multiItemsAsJson = new org.json.JSONObject();
+		    multiItemsAsJson.put("documents", new org.json.JSONArray(documentsAsJson));
+		    multiItemsAsJson.put("pipelineConfig", pipelineConfig);
+		    multiItemsAsJson.put("componentId", componentId);
+			final String response = sendRequest(multiItemsAsJson.toString());
+
+			combinedDocument = LinkerUtils.apiJSONToDocument(response);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return combinedDocument;
 	}
 
 	@Override
