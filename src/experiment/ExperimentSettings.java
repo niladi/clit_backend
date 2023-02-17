@@ -13,6 +13,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
 
+import clit.APIComponent;
 import clit.combiner.IntersectCombiner;
 import clit.combiner.UnionCombiner;
 import clit.eval.NIFBaseEvaluator;
@@ -35,6 +36,7 @@ import linking.linkers.TagMeLinker;
 import linking.linkers.TextRazorLinker;
 import linking.mentiondetection.exact.SpaCyMentionDetector;
 import structure.config.constants.EnumPipelineType;
+import structure.datatypes.AnnotatedDocument;
 import structure.interfaces.clit.Combiner;
 import structure.interfaces.clit.Filter;
 import structure.interfaces.clit.Splitter;
@@ -55,6 +57,7 @@ public enum ExperimentSettings {
 	// HashMap<>();
 	private final Map<String, Collection<EnumPipelineType>> linkerTasktypeMapping = new HashMap<>();
 	private final Map<String, Class<? extends PipelineComponent>> componentClasses = new HashMap<>();
+	private final Map<String, PipelineComponent> apiComponentClasses = new HashMap<>();
 //	= Collections
 //			.unmodifiableMap(new HashMap<String, Collection<EnumPipelineType>>() {
 //				private static final long serialVersionUID = 1L;
@@ -138,6 +141,19 @@ public enum ExperimentSettings {
 		// DBpediaLookFinder
 		addComponent("DBpediaLookup", DBpediaLookupCandidateGenerator.class, EnumPipelineType.CG);//
 
+		// Load CLiT API components from the properties files
+		// for each of them instantiate an APIComponent which will then be used by
+		// APIComponentCommunicator to actually communicate with it
+		final APIComponent apiComponent = new APIComponent("google.com", "Test linker...") {
+
+			@Override
+			public Collection<AnnotatedDocument> execute(PipelineItem callItem, AnnotatedDocument document)
+					throws Exception {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		};
+		addAPIComponent(apiComponent, EnumPipelineType.MD);
 	}
 
 	/**
@@ -186,6 +202,23 @@ public enum ExperimentSettings {
 		} else {
 			addComponent(name, className, tasks.toArray(new EnumPipelineType[0]));
 		}
+	}
+
+	private void addAPIComponent(final APIComponent apiComponent, EnumPipelineType... enumPipelineTypes) {
+		Collection<EnumPipelineType> pipelineTypes = Lists.newArrayList();
+		if (enumPipelineTypes != null && enumPipelineTypes.length > 0) {
+			for (EnumPipelineType type : enumPipelineTypes) {
+				pipelineTypes.add(type);
+			}
+			// Allows task-specific grouping of components
+			linkerTasktypeMapping.put(apiComponent.getDisplayName(), pipelineTypes);
+		}
+		// Add it to the "normal" components
+		componentClasses.put(apiComponent.getDisplayName(), APIComponent.class);
+
+		// Keep track of this specific API component
+		apiComponentClasses.put(apiComponent.getDisplayName(), apiComponent);
+
 	}
 
 	private void addComponent(final String name, final Class<? extends PipelineComponent> className,
@@ -472,6 +505,12 @@ public enum ExperimentSettings {
 	public static Map<String, Class<? extends PipelineComponent>> getComponentClassesCaseInsensitive() {
 		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		retMap.putAll(INSTANCE.componentClasses);
+		return retMap;
+	}
+
+	public static Map<String, PipelineComponent> getAPIComponentClassesCaseInsensitive() {
+		final Map<String, PipelineComponent> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		retMap.putAll(INSTANCE.apiComponentClasses);
 		return retMap;
 	}
 

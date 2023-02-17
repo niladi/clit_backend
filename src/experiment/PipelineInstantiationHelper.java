@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 
 import org.json.simple.JSONObject;
 
+import clit.APIComponent;
 import clit.APIComponentCommunicator;
 import structure.config.kg.EnumModelType;
 import structure.exceptions.PipelineException;
@@ -17,9 +18,10 @@ import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
 import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
+import structure.utils.Loggable;
 import structure.utils.NetUtils;
 
-public class PipelineInstantiationHelper {
+public class PipelineInstantiationHelper implements Loggable {
 
 	/**
 	 * Add a linking component (MD, CG, ED, CG_ED) found in the pipeline config to
@@ -35,28 +37,38 @@ public class PipelineInstantiationHelper {
 	protected void instantiateLinkingComponent(final JSONObject jsonPipeline, final EnumModelType knowledgeBase,
 			final Pipeline pipeline, final EnumComponentType linkingComponentType, final String componentId,
 			final String componentValue) throws PipelineException {
-		final Class<? extends PipelineComponent> clazz = ExperimentSettings.getComponentClassesCaseInsensitive()//;//getComponentNamesCaseInsensitive();//.getLinkerClassesCaseInsensitive()
+		final PipelineComponent apiComponentInstance = ExperimentSettings.getAPIComponentClassesCaseInsensitive()
 				.get(componentValue);
-		final boolean useIP;
-		if (clazz == null) {
-			useIP = NetUtils.isIPv4Address(componentValue) || NetUtils.isIRI(componentValue);
+		final Class<? extends PipelineComponent> clazz = ExperimentSettings.getComponentClassesCaseInsensitive()// ;//getComponentNamesCaseInsensitive();//.getLinkerClassesCaseInsensitive()
+				.get(componentValue);
+		final boolean isValidIP = isIPBasedComponent(componentValue);
+
+		if (clazz == null && !isValidIP) {
+			throw new RuntimeException(
+					"No adequate class found nor is it an IP-based component... [" + componentValue + "]");
+		}
+
+		final String apiURLStr;
+		final boolean useAPICommunicator;
+		if (clazz != null && APIComponent.class.isAssignableFrom(clazz)) {
+			// It's an API component
+			useAPICommunicator = isValidIP;
+			APIComponent apiComponent = ((APIComponent) apiComponentInstance);
+			apiURLStr = apiComponent.getUrlString();
 		} else {
-			useIP = false;
+			apiURLStr = componentValue;
+			useAPICommunicator = (clazz == null) && isValidIP;
 		}
 
-		if (clazz == null && !useIP) {
-			throw new RuntimeException("No adequate class found nor is it an IP-based component... ["+componentValue+"]");
-		}
-
-		System.out.println("Linking component type: " + linkingComponentType);
+		getLogger().info("Linking component type: " + linkingComponentType);
 		try {
 			switch (linkingComponentType) {
 			case MD:
 				final MentionDetector mentionDetector;
-				if (useIP) {
+				if (isValidIP && useAPICommunicator) {
 					// Use IP to communicate with a MD API
 					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, componentValue, jsonPipeline);
+							componentId, apiURLStr, jsonPipeline);
 					mentionDetector = (MentionDetector) apiCommunicator;
 				} else {
 					mentionDetector = (MentionDetector) clazz// Class.forName(className)
@@ -64,15 +76,14 @@ public class PipelineInstantiationHelper {
 				}
 
 				pipeline.addMD(componentId, mentionDetector);
-				System.out
-						.println("Info: Added mention detector '" + componentValue + "' with ID '" + componentId + "'");
+				getLogger().info("Info: Added mention detector '" + componentValue + "' with ID '" + componentId + "'");
 				break;
 			case CG:
 				final CandidateGenerator candidateGenerator;
-				if (useIP) {
+				if (useAPICommunicator) {
 					// Use IP to communicate with a CG API
 					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, componentValue, jsonPipeline);
+							componentId, apiURLStr, jsonPipeline);
 					candidateGenerator = (CandidateGenerator) apiCommunicator;
 
 				} else {
@@ -80,27 +91,27 @@ public class PipelineInstantiationHelper {
 							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
 				}
 				pipeline.addCG(componentId, candidateGenerator);
-				System.out.println(
-						"Info: Added candidate generator '" + componentValue + "' with ID '" + componentId + "'");
+				getLogger()
+						.info("Info: Added candidate generator '" + componentValue + "' with ID '" + componentId + "'");
 				break;
 			case ED:
 				final Disambiguator disambiguator;
-				if (useIP) {
+				if (useAPICommunicator) {
 					// Use IP to communicate with a CG API
 					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, componentValue, jsonPipeline);
+							componentId, apiURLStr, jsonPipeline);
 					disambiguator = (Disambiguator) apiCommunicator;
 				} else {
 					disambiguator = (Disambiguator) clazz// Class.forName(className)
 							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
 				}
 				pipeline.addED(componentId, disambiguator);
-				System.out.println(
+				getLogger().info(
 						"Info: Added entity disambiguator '" + componentValue + "' with ID '" + componentId + "'");
 				break;
 			case CG_ED:
 				final CandidateGeneratorDisambiguator candidateGeneratorDisambiguator;
-				if (useIP) {
+				if (useAPICommunicator) {
 					// Use IP to communicate with a CG API
 					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
 							componentId, componentValue, jsonPipeline);
@@ -110,7 +121,7 @@ public class PipelineInstantiationHelper {
 							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
 				}
 				pipeline.addCG_ED(componentId, candidateGeneratorDisambiguator);
-				System.out.println("Info: Added candidate generator disambiguator '" + componentValue + "' with ID '"
+				getLogger().info("Info: Added candidate generator disambiguator '" + componentValue + "' with ID '"
 						+ componentId + "'");
 				break;
 			default:
@@ -155,7 +166,7 @@ public class PipelineInstantiationHelper {
 				if (combiner != null) {
 					// Adds combiner
 					pipeline.addCombiner(keyStr, combiner);
-					System.out.println("Info: Added combiner '" + valueStr + "' with ID '" + keyStr + "'");
+					getLogger().info("Info: Added combiner '" + valueStr + "' with ID '" + keyStr + "'");
 				}
 
 				break;
@@ -167,7 +178,7 @@ public class PipelineInstantiationHelper {
 				if (splitter != null) {
 					// Adds splitter
 					pipeline.addSplitter(keyStr, splitter);
-					System.out.println("Info: Added splitter '" + valueStr + "' with ID '" + keyStr + "'");
+					getLogger().info("Info: Added splitter '" + valueStr + "' with ID '" + keyStr + "'");
 				}
 				break;
 			case TRANSLATOR:
@@ -178,7 +189,7 @@ public class PipelineInstantiationHelper {
 				if (translator != null) {
 					// Adds translator
 					pipeline.addTranslator(keyStr, translator);
-					System.out.println("Info: Added translator '" + valueStr + "' with ID '" + keyStr + "'");
+					getLogger().info("Info: Added translator '" + valueStr + "' with ID '" + keyStr + "'");
 				}
 				break;
 			case FILTER:
@@ -189,7 +200,7 @@ public class PipelineInstantiationHelper {
 				if (filter != null) {
 					// Adds filter
 					pipeline.addFilter(keyStr, filter);
-					System.out.println("Info: Added filter '" + valueStr + "' with ID '" + keyStr + "'");
+					getLogger().info("Info: Added filter '" + valueStr + "' with ID '" + keyStr + "'");
 				}
 				break;
 			default:
@@ -213,7 +224,7 @@ public class PipelineInstantiationHelper {
 		}
 
 		// IP-based API component
-		if (NetUtils.isIPv4Address(componentValue)) {
+		if (isIPBasedComponent(componentValue)) {
 			try {
 				APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(null, componentId,
 						componentValue, jsonPipeline);
@@ -240,7 +251,7 @@ public class PipelineInstantiationHelper {
 		}
 
 		// IP-based API component
-		if (NetUtils.isIPv4Address(componentValue)) {
+		if (isIPBasedComponent(componentValue)) {
 			try {
 				APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(null, componentId,
 						componentValue, jsonPipeline);
@@ -267,7 +278,7 @@ public class PipelineInstantiationHelper {
 		}
 
 		// IP-based API component
-		if (NetUtils.isIPv4Address(componentValue)) {
+		if (isIPBasedComponent(componentValue)) {
 			try {
 				APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(null, componentId,
 						componentValue, jsonPipeline);
@@ -294,7 +305,7 @@ public class PipelineInstantiationHelper {
 		}
 
 		// IP-based API component
-		if (NetUtils.isIPv4Address(componentValue)) {
+		if (isIPBasedComponent(componentValue)) {
 			try {
 				APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(null, componentId,
 						componentValue, jsonPipeline);
@@ -323,6 +334,16 @@ public class PipelineInstantiationHelper {
 	public void instantiatePipelineConnection(final Pipeline pipeline, String sourceStr, String targetStr)
 			throws PipelineException {
 		pipeline.addConnection(sourceStr, targetStr);
+	}
+
+	/**
+	 * Checks whether the passed String argument is an IPv4 address or an IRI
+	 * 
+	 * @param urlStr URL string to be checked whether it is actually a URL
+	 * @return
+	 */
+	private boolean isIPBasedComponent(final String urlStr) {
+		return NetUtils.isIPv4Address(urlStr) || NetUtils.isIRI(urlStr);
 	}
 
 }

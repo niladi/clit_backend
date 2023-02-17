@@ -11,21 +11,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.function.BiFunction;
-
 
 import org.json.simple.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import experiment.PipelineItem;
-import opennlp.tools.coref.Linker;
 import structure.abstractlinker.AbstractLinkerURL;
 import structure.abstractlinker.AbstractLinkerURLPOST;
 import structure.config.kg.EnumModelType;
