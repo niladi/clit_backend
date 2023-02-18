@@ -10,10 +10,12 @@ import java.util.Properties;
 
 import com.google.common.collect.Lists;
 
-import structure.config.constants.EnumPipelineType;
+import experiment.EnumComponentType;
 
 public class APIPropertyLoader {
 	private final String propertyFolder;
+
+	private static final String localPath = "C:\\Users\\wf7467\\Desktop\\GitHub\\kmdn\\combining_linking_techniques\\properties";
 
 	public APIPropertyLoader(final String folder) {
 		this.propertyFolder = folder;
@@ -21,7 +23,7 @@ public class APIPropertyLoader {
 	}
 
 	public APIPropertyLoader() {
-		this("/clit/properties");
+		this(new File("/clit/properties").exists() ? "/clit/properties" : localPath);
 	}
 
 	public Collection<APIComponent> load() {
@@ -64,17 +66,18 @@ public class APIPropertyLoader {
 				valURL = prop.getProperty(keyURL);
 				System.out.println("ValURL: " + valURL);
 				// get the display name
-				valDisplayName = prop.getProperty(keyDisplayName);
+				valDisplayName = prop.getProperty(keyDisplayName) +" (.properties)";
 				System.out.println("val display name: " + valDisplayName);
 
 				// the rest of the values are defined in EnumPipelineType.values()
-				final List<EnumPipelineType> types = Lists.newArrayList();
-				for (EnumPipelineType type : EnumPipelineType.values()) {
-					if (Boolean.valueOf(prop.getProperty(type.getName()))) {
+				final List<EnumComponentType> types = Lists.newArrayList();
+				for (EnumComponentType type : EnumComponentType.values()) {
+					if (Boolean.valueOf(prop.getProperty(type.name))) {
 						System.out.println("Component is a: " + type);
 						types.add(type);
 					}
 				}
+
 				final APIComponent apiComponent = new APIComponent(valURL, valDisplayName, types);
 				propertiesAPIComponents.add(apiComponent);
 			} catch (IOException ex) {

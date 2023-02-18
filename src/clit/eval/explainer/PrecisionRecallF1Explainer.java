@@ -3,6 +3,7 @@ package clit.eval.explainer;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +19,10 @@ import com.google.common.collect.Lists;
 import clit.eval.datatypes.EvalConstants;
 import clit.eval.interfaces.AnnotationEvaluation;
 import clit.eval.interfaces.Explainer;
+import experiment.PipelineItem;
 import smile.clustering.DBScan;
 import smile.math.distance.Distance;
+import structure.datatypes.AnnotatedDocument;
 
 public class PrecisionRecallF1Explainer implements Explainer {
 
@@ -381,6 +384,12 @@ public class PrecisionRecallF1Explainer implements Explainer {
 		}
 
 		return Arrays.asList(new String[] { precisionFeatureKey, recallFeatureKey, f1FeatureKey });
+	}
+
+	@Override
+	public Collection<AnnotatedDocument> execute(PipelineItem callItem, AnnotatedDocument document) throws Exception {
+		throw new RuntimeException("Explainer 'execute' method updates required.");
+		// return null;
 	}
 
 }

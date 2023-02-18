@@ -1,8 +1,6 @@
 package experiment;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,9 +15,6 @@ import clit.APIComponent;
 import clit.APIPropertyLoader;
 import clit.combiner.IntersectCombiner;
 import clit.combiner.UnionCombiner;
-import clit.eval.NIFBaseEvaluator;
-import clit.eval.explainer.PrecisionRecallF1Explainer;
-import clit.eval.interfaces.Explainer;
 import clit.splitter.CopySplitter;
 import clit.translator.TranslatorDBpediaToWikidata;
 import clit.translator.TranslatorWikidataToDBpedia;
@@ -36,30 +31,47 @@ import linking.linkers.RadboudLinker;
 import linking.linkers.TagMeLinker;
 import linking.linkers.TextRazorLinker;
 import linking.mentiondetection.exact.SpaCyMentionDetector;
-import structure.config.constants.EnumPipelineType;
-import structure.interfaces.clit.Combiner;
-import structure.interfaces.clit.Filter;
-import structure.interfaces.clit.Splitter;
-import structure.interfaces.clit.Translator;
 import structure.interfaces.linker.Linker;
-import structure.interfaces.pipeline.CandidateGenerator;
-import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
-import structure.interfaces.pipeline.Disambiguator;
-import structure.interfaces.pipeline.Evaluator;
 import structure.interfaces.pipeline.FullAnnotator;
-import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
 
 public enum ExperimentSettings {
 	INSTANCE();
 
+	/**
+	 * Map assigning linker names (strings) to linker classes <br>
+	 * <br>
+	 * Note: Primary potential attack vector as reflection is used on these.
+	 * Therefore: restrict access to these maps, among others by making the
+	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
+	 * reference to the modifiable version)
+	 */
+
 	// private final HashMap<Linker, Collection<ExperimentType>> mapping = new
 	// HashMap<>();
-	private final Map<String, Collection<EnumPipelineType>> linkerTasktypeMapping = new HashMap<>();
+	/**
+	 * Answers the question: for this component name I specified, what tasks can it
+	 * do? (Opposite of mapTypeComponentNames)
+	 */
+	private final Map<String, Collection<EnumComponentType>> linkerTasktypeMapping = new HashMap<>();
+	/**
+	 * Allows for easy task-specific grouping, answers the question: "for this task,
+	 * what components are available?"
+	 */
+	private final Map<EnumComponentType, List<String>> mapTypeComponentNames = new HashMap<>();
+	/**
+	 * Answers the question: for this component name I specified, what's the class?
+	 * (for execution)
+	 */
 	private final Map<String, Class<? extends PipelineComponent>> componentClasses = new HashMap<>();
+
+	/**
+	 * Answers the question: for this API component name I specified, what's the
+	 * class? (for execution)
+	 */
 	private final Map<String, PipelineComponent> apiComponentClasses = new HashMap<>();
 //	= Collections
-//			.unmodifiableMap(new HashMap<String, Collection<EnumPipelineType>>() {
+//			.unmodifiableMap(new HashMap<String, Collection<EnumComponentType>>() {
 //				private static final long serialVersionUID = 1L;
 //				{
 //				}
@@ -124,7 +136,7 @@ public enum ExperimentSettings {
 		addComponent("REL", RadboudLinker.class);
 
 		// MAG
-		// addComponent("MAG", MAGLinker.class, EnumPipelineType.CG_ED);
+		// addComponent("MAG", MAGLinker.class, EnumComponentType.CG_ED);
 
 		// TextRazor
 		addComponent("TextRazor", TextRazorLinker.class);
@@ -133,23 +145,44 @@ public enum ExperimentSettings {
 		addComponent("Falcon 2.0", Falcon2Linker.class);//
 
 		// spaCy - MD
-		addComponent("spaCy", SpaCyMentionDetector.class, EnumPipelineType.MD);
+		addComponent("spaCy", SpaCyMentionDetector.class, EnumComponentType.MD);
 
 		// Wikidata CG dictionary - CG
-		addComponent("WikidataDict", WikidataDictCandidateGenerator.class, EnumPipelineType.CG);
+		addComponent("WikidataDict", WikidataDictCandidateGenerator.class, EnumComponentType.CG);
 
 		// DBpediaLookFinder
-		addComponent("DBpediaLookup", DBpediaLookupCandidateGenerator.class, EnumPipelineType.CG);//
+		addComponent("DBpediaLookup", DBpediaLookupCandidateGenerator.class, EnumComponentType.CG);//
+
+		// Translators
+		// DBpedia to Wikidata
+		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class);
+		// Wikidata to DBpedia
+		addComponent("WD2DBP", TranslatorWikidataToDBpedia.class);
+
+		// Combiners
+		addComponent("Union", UnionCombiner.class);
+		addComponent("Intersection", IntersectCombiner.class);
+
+		// Splitters
+		// splitters: copy
+		addComponent("Copy", CopySplitter.class);
+
+		// Translators
+		// DBpedia to Wikidata
+		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class);
+		// Wikidata to DBpedia
+		addComponent("WD2DBP", TranslatorWikidataToDBpedia.class);
 
 		// Load CLiT API components from the properties files
 		// for each of them instantiate an APIComponent which will then be used by
 		// APIComponentCommunicator to actually communicate with it
+		System.out.println("starting properties loading process");
 		final APIPropertyLoader propertyLoader = new APIPropertyLoader();
 		final Collection<APIComponent> apiComponents = propertyLoader.load();
 		System.out.println("Adding components: " + apiComponents.size());
 		for (APIComponent apiComponent : apiComponents) {
 			System.out.println("Adding API Component: " + apiComponent.getDisplayName());
-			addAPIComponent(apiComponent, apiComponent.getTasks().toArray(new EnumPipelineType[] {}));
+			addAPIComponent(apiComponent, apiComponent.getTasks().toArray(new EnumComponentType[] {}));
 		}
 
 	}
@@ -165,86 +198,80 @@ public enum ExperimentSettings {
 		if (className == null)
 			throw new RuntimeException("Cannot accept a component without an associated class to instantiate it.");
 		// Try to "smartly" see what it can do
-		final Set<EnumPipelineType> tasks = new HashSet<>();// Lists.newArrayList();
+		final Set<EnumComponentType> tasks = new HashSet<>();// Lists.newArrayList();
 
-		// Single-step components
-		if (MentionDetector.class.isAssignableFrom(className)) {
-			tasks.add(EnumPipelineType.MD);
-		}
-		if (CandidateGenerator.class.isAssignableFrom(className)) {
-			tasks.add(EnumPipelineType.CG);
-		}
-		if (Disambiguator.class.isAssignableFrom(className)) {
-			tasks.add(EnumPipelineType.ED);
-		}
-
-		// Composites...
-		if (CandidateGeneratorDisambiguator.class.isAssignableFrom(className)) {
-			tasks.add(EnumPipelineType.CG_ED);
+		// Covers checking for all tasks defined in EnumComponentType
+		for (EnumComponentType type : EnumComponentType.values()) {
+			if (type.type != null) {
+				if (type.type.isAssignableFrom(className)) {
+					tasks.add(type);
+				}
+			}
 		}
 
 		// Complete Linker instances
 		if (Linker.class.isAssignableFrom(className) || FullAnnotator.class.isAssignableFrom(className)) {
 			// It's a linker, so add MD and CG_ED to it through our hacks
-			tasks.add(EnumPipelineType.MD);
-			tasks.add(EnumPipelineType.CG_ED);
-			tasks.add(EnumPipelineType.FULL);
-		}
-
-		if (Disambiguator.class.isAssignableFrom(className)) {
-			tasks.add(EnumPipelineType.ED);
+			tasks.add(EnumComponentType.MD);
+			tasks.add(EnumComponentType.CG_ED);
+			tasks.add(EnumComponentType.MD_CG_ED);
 		}
 
 		if (tasks == null || tasks.size() < 1) {
-			addComponent(name, className, (EnumPipelineType[]) null);
+			addComponent(name, className, (EnumComponentType[]) null);
 		} else {
-			addComponent(name, className, tasks.toArray(new EnumPipelineType[0]));
+			addComponent(name, className, tasks.toArray(new EnumComponentType[] {}));
 		}
 	}
 
-	private void addAPIComponent(final APIComponent apiComponent, EnumPipelineType... enumPipelineTypes) {
-		Collection<EnumPipelineType> pipelineTypes = Lists.newArrayList();
-		if (enumPipelineTypes != null && enumPipelineTypes.length > 0) {
-			for (EnumPipelineType type : enumPipelineTypes) {
-				pipelineTypes.add(type);
-			}
-			// Allows task-specific grouping of components
-			linkerTasktypeMapping.put(apiComponent.getDisplayName(), pipelineTypes);
-
-			// Add it to the "normal" components
-			componentClasses.put(apiComponent.getDisplayName(), APIComponent.class);
-		}
-
+	/**
+	 * Add a component that is powered by the default protocols defined by
+	 * APIComponentCommunicator
+	 * 
+	 * @param apiComponent       the API component with information on URL, display
+	 *                           name and such
+	 * @param EnumComponentTypes what this component can do
+	 */
+	private void addAPIComponent(final APIComponent apiComponent, EnumComponentType... EnumComponentTypes) {
 		// Keep track of this specific API component
 		apiComponentClasses.put(apiComponent.getDisplayName(), apiComponent);
-
+		addComponent(apiComponent.getDisplayName(), APIComponent.class, EnumComponentTypes);
 	}
 
-	private void addComponent(final String name, final Class<? extends PipelineComponent> className,
-			EnumPipelineType... enumPipelineTypes) {
-		if (className == null) {
+	private void addComponent(final String name, final Class<? extends PipelineComponent> clazz,
+			EnumComponentType... EnumComponentTypes) {
+		if (clazz == null) {
 			throw new RuntimeException("Tried to add a component without instantiation path...");
+		}
+
+		if (EnumComponentTypes != null && EnumComponentTypes.length > 0) {
+			// Easily find out what each component can do
+			final Collection<EnumComponentType> pipelineTypes = Lists.newArrayList(EnumComponentTypes);
+			linkerTasktypeMapping.put(name, pipelineTypes);
+
+			// Sort components by type for simplified access...
+			for (EnumComponentType type : EnumComponentTypes) {
+				List<String> names;
+				if ((names = mapTypeComponentNames.get(type)) == null) {
+					names = Lists.newArrayList();
+					mapTypeComponentNames.put(type, names);
+				}
+				names.add(name);
+			}
 		}
 
 		// NULL --> it could be anything, so add it
 		// It's a linker --> add it as a linker
-		if (enumPipelineTypes == null || containsLinker(enumPipelineTypes)) {
-			linkerClasses.put(name, className);
-		}
-		if (enumPipelineTypes != null && enumPipelineTypes.length > 0) {
-			Collection<EnumPipelineType> pipelineTypes = Lists.newArrayList();
-			for (EnumPipelineType type : enumPipelineTypes) {
-				pipelineTypes.add(type);
-			}
-			linkerTasktypeMapping.put(name, pipelineTypes);
+		if (EnumComponentTypes == null || containsLinker(EnumComponentTypes)) {
+			linkerClasses.put(name, clazz);
 		}
 
-		componentClasses.put(name, className);
+		componentClasses.put(name, clazz);
 	}
 
-	boolean containsLinker(EnumPipelineType[] enumPipelineTypes) {
-		for (EnumPipelineType e : enumPipelineTypes) {
-			if (EnumPipelineType.FULL == e) {
+	boolean containsLinker(EnumComponentType[] EnumComponentTypes) {
+		for (EnumComponentType e : EnumComponentTypes) {
+			if (EnumComponentType.MD_CG_ED == e) {
 				return true;
 			}
 		}
@@ -252,140 +279,65 @@ public enum ExperimentSettings {
 	}
 
 	/**
-	 * Return the linkers that can perform a specific experiment type
+	 * Return the linkers
 	 * 
 	 * @param experimentType
 	 * @return
 	 */
-	public static List<String> getLinkerForExperimentType(EnumPipelineType experimentType) {
-		List<String> linkers = new ArrayList<>();
-		for (String key : INSTANCE.linkerTasktypeMapping.keySet()) {
-			if (INSTANCE.linkerTasktypeMapping.get(key).contains(experimentType)) {
-				linkers.add(key);
-			}
+	public static List<String> getLinkers() {
+		final List<String> linkers = INSTANCE.mapTypeComponentNames.get(EnumComponentType.MD_CG_ED);
+		if (linkers == null || linkers.size() < 1) {
+			return Lists.newArrayList();
 		}
 		return linkers;
 	}
 
 	/**
-	 * Map assigning linker names (strings) to linker classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
+	 * Return the component names that can perform a specific type of action
+	 * 
+	 * @param experimentType
+	 * @return
 	 */
-	private static final Map<String, Class<? extends Translator>> translatorClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Translator>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// Translators
-
-					// DBpedia to Wikidata
-					put("DBP2WD", TranslatorDBpediaToWikidata.class);
-					// Wikidata to DBpedia
-					put("WD2DBP", TranslatorWikidataToDBpedia.class);
-				}
-			});
-
-	/**
-	 * Map assigning evaluator names (strings) to evaluator classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, Class<? extends Evaluator>> evaluatorClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Evaluator>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// Translators
-
-					// Base evaluator for Precision, Recall, F1
-					put("Base Evaluator (NIF, Precision, Recall, F1)", NIFBaseEvaluator.class);
-				}
-			});
-
-	/**
-	 * Map assigning evaluator names (strings) to evaluator classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, Class<? extends Explainer>> explainerClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Explainer>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// Translators
-
-					// Base evaluator for Precision, Recall, F1
-					put("Explainer based on Precision, Recall and F1 measure.", PrecisionRecallF1Explainer.class);
-				}
-			});
-
-	/**
-	 * Map assigning filter names (strings) to filter classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, Class<? extends Filter>> filterClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Filter>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// Filters
-					// no filter classes yet defined <3
-				}
-			});
-
-	/**
-	 * Map assigning linker names (strings) to linker classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, Class<? extends Combiner>> combinerClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Combiner>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// combiners: union and intersection
-					put("union", UnionCombiner.class);
-					put("intersection", IntersectCombiner.class);
-				}
-			});
-
-	/**
-	 * Map assigning linker names (strings) to linker classes <br>
-	 * <br>
-	 * Note: Primary potential attack vector as reflection is used on these.
-	 * Therefore: restrict access to these maps, among others by making the
-	 * unmodifiable (e.g. through Collections.unmodifiableMap(...) and losing the
-	 * reference to the modifiable version)
-	 */
-	private static final Map<String, Class<? extends Splitter>> splitterClasses = Collections
-			.unmodifiableMap(new HashMap<String, Class<? extends Splitter>>() {
-				private static final long serialVersionUID = 1L;
-				{
-					// splitters: copy
-					put("copy", CopySplitter.class);
-				}
-			});
+	public static List<String> getComponentsForType(EnumComponentType experimentType) {
+		final List<String> linkers = INSTANCE.mapTypeComponentNames.get(experimentType);
+		if (linkers == null) {
+			return Lists.newArrayList();
+		}
+		return linkers;
+	}
 
 	/**
 	 * Returns a case insensitive copy of an unmodifiable SPLITTER map
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, Class<? extends Splitter>> getSplitterClassesCaseInsensitive() {
-		final Map<String, Class<? extends Splitter>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-		retMap.putAll(splitterClasses);
+	public static Map<String, Class<? extends PipelineComponent>> getSplitterClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.SPLITTER);
+		retMap.putAll(namesAndClasses);
+		return retMap;
+	}
+
+	private final static Map<String, Class<? extends PipelineComponent>> getNamesAndClassesForType(
+			EnumComponentType type) {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new HashMap<>();
+		if (type == null) {
+			throw new RuntimeException("No type passed...");
+		}
+		List<String> names = INSTANCE.mapTypeComponentNames.get(type);
+		if (names == null) {
+			// Avoid NPEs & unexpected behaviour
+			names = Lists.newArrayList();
+		}
+		for (String name : names) {
+			final Class<? extends PipelineComponent> clazz = INSTANCE.componentClasses.get(name);
+			if (clazz != null) {
+				retMap.put(name, clazz);
+			}
+		}
+
 		return retMap;
 	}
 
@@ -396,12 +348,13 @@ public enum ExperimentSettings {
 	 */
 	public static Map<String, Class<? extends PipelineComponent>> getLinkerClassesCaseInsensitive() {
 		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-		retMap.putAll(INSTANCE.linkerClasses);
-		retMap.putAll(INSTANCE.translatorClasses);
-		retMap.putAll(INSTANCE.combinerClasses);
-		retMap.putAll(INSTANCE.splitterClasses);
-		retMap.putAll(INSTANCE.filterClasses);
-		retMap.putAll(INSTANCE.evaluatorClasses);
+		// retMap.putAll(INSTANCE.linkerClasses);
+		retMap.putAll(INSTANCE.componentClasses);
+		// retMap.putAll(INSTANCE.translatorClasses);
+		// retMap.putAll(INSTANCE.combinerClasses);
+		// retMap.putAll(INSTANCE.splitterClasses);
+		// retMap.putAll(INSTANCE.filterClasses);
+		// retMap.putAll(INSTANCE.evaluatorClasses);
 		return retMap;
 	}
 
@@ -420,9 +373,12 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, Class<? extends Combiner>> getCombinerClassesCaseInsensitive() {
-		final Map<String, Class<? extends Combiner>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-		retMap.putAll(combinerClasses);
+	public static Map<String, Class<? extends PipelineComponent>> getCombinerClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.COMBINER);
+		retMap.putAll(namesAndClasses);
 		return retMap;
 	}
 
@@ -431,9 +387,12 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, Class<? extends Translator>> getTranslatorClassesCaseInsensitive() {
-		final Map<String, Class<? extends Translator>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-		retMap.putAll(translatorClasses);
+	public static Map<String, Class<? extends PipelineComponent>> getTranslatorClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.TRANSLATOR);
+		retMap.putAll(namesAndClasses);
 		return retMap;
 	}
 
@@ -442,9 +401,12 @@ public enum ExperimentSettings {
 	 * 
 	 * @return case insensitive map <3
 	 */
-	public static Map<String, Class<? extends Filter>> getFilterClassesCaseInsensitive() {
-		final Map<String, Class<? extends Filter>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-		retMap.putAll(filterClasses);
+	public static Map<String, Class<? extends PipelineComponent>> getFilterClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.SPLITTER);
+		retMap.putAll(namesAndClasses);
 		return retMap;
 	}
 
@@ -454,7 +416,8 @@ public enum ExperimentSettings {
 	 * @return a copy of possible linkers
 	 */
 	public static final Set<String> getLinkerNames() {
-		return new HashSet<>(INSTANCE.linkerClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.MD_CG_ED));
+		// return new HashSet<>(INSTANCE.linkerClasses.keySet());
 	}
 
 	/**
@@ -463,7 +426,8 @@ public enum ExperimentSettings {
 	 * @return a copy of possible translators
 	 */
 	public static final Set<String> getTranslatorNames() {
-		return new HashSet<>(translatorClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.TRANSLATOR));
+		// return new HashSet<>(INSTANCE.translatorClasses.keySet());
 	}
 
 	/**
@@ -472,7 +436,7 @@ public enum ExperimentSettings {
 	 * @return a copy of possible combiners
 	 */
 	public static Collection<? extends String> getCombinerNames() {
-		return new HashSet<>(combinerClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.COMBINER));
 	}
 
 	/**
@@ -481,7 +445,8 @@ public enum ExperimentSettings {
 	 * @return a copy of possible splitters
 	 */
 	public static Collection<? extends String> getSplitterNames() {
-		return new HashSet<>(splitterClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.SPLITTER));
+		// .splitterClasses.keySet());
 	}
 
 	/**
@@ -490,15 +455,18 @@ public enum ExperimentSettings {
 	 * @return a copy of possible filters
 	 */
 	public static Collection<? extends String> getFilterNames() {
-		return new HashSet<>(filterClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER));
+		// return new HashSet<>(INSTANCE.filterClasses.keySet());
 	}
 
 	public static Collection<? extends String> getEvaluatorNames() {
-		return new HashSet<>(evaluatorClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.EVALUATOR));
+		// return new HashSet<>(INSTANCE.evaluatorClasses.keySet());
 	}
 
 	public static Collection<? extends String> getExplainerNames() {
-		return new HashSet<>(explainerClasses.keySet());
+		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.EXPLAINER));
+		// return new HashSet<>(INSTANCE.explainerClasses.keySet());
 	}
 
 	public static Map<String, Class<? extends PipelineComponent>> getComponentClassesCaseInsensitive() {
