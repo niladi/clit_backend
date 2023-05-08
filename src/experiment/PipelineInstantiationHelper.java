@@ -2,7 +2,9 @@ package experiment;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URL;
 
+import org.apache.commons.validator.UrlValidator;
 import org.json.simple.JSONObject;
 
 import clit.APIComponent;
@@ -350,7 +352,13 @@ public class PipelineInstantiationHelper implements Loggable {
 	 * @return
 	 */
 	private boolean isIPBasedComponent(final String urlStr) {
-		return NetUtils.isIPv4Address(urlStr) || NetUtils.isIRI(urlStr);
+		try {
+			new URL(urlStr);
+			return true;
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			return false;
+		}
 	}
 
 }

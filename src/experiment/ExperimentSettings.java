@@ -155,23 +155,18 @@ public enum ExperimentSettings {
 
 		// Translators
 		// DBpedia to Wikidata
-		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class);
+		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class, EnumComponentType.TRANSLATOR);
 		// Wikidata to DBpedia
-		addComponent("WD2DBP", TranslatorWikidataToDBpedia.class);
+		addComponent("WD2DBP", TranslatorWikidataToDBpedia.class, EnumComponentType.TRANSLATOR);
 
 		// Combiners
-		addComponent("Union", UnionCombiner.class);
-		addComponent("Intersection", IntersectCombiner.class);
+		addComponent("Union", UnionCombiner.class, EnumComponentType.COMBINER);
+		addComponent("Intersection", IntersectCombiner.class, EnumComponentType.COMBINER);
 
 		// Splitters
 		// splitters: copy
-		addComponent("Copy", CopySplitter.class);
+		addComponent("Copy", CopySplitter.class, EnumComponentType.SPLITTER);
 
-		// Translators
-		// DBpedia to Wikidata
-		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class);
-		// Wikidata to DBpedia
-		addComponent("WD2DBP", TranslatorWikidataToDBpedia.class);
 
 		// Load CLiT API components from the properties files
 		// for each of them instantiate an APIComponent which will then be used by
@@ -405,7 +400,7 @@ public enum ExperimentSettings {
 		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		// Get all SPLITTER names and then extract all the classes from Components
 		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
-				EnumComponentType.SPLITTER);
+				EnumComponentType.FILTER);
 		retMap.putAll(namesAndClasses);
 		return retMap;
 	}
@@ -455,6 +450,8 @@ public enum ExperimentSettings {
 	 * @return a copy of possible filters
 	 */
 	public static Collection<? extends String> getFilterNames() {
+		if(INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER) == null)
+			return new HashSet<>();
 		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER));
 		// return new HashSet<>(INSTANCE.filterClasses.keySet());
 	}
