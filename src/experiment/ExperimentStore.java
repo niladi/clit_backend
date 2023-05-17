@@ -47,8 +47,9 @@ public class ExperimentStore {
 
 	/**
 	 * Write the results of an experiments to a JSON file.
+	 * 
 	 * @param path
-	 * @param results 
+	 * @param results
 	 */
 	public void writeExperimentResultToJsonFile(Experiment experimentResult) {
 		int experimentId = experimentResult.getExperimentId();
@@ -66,6 +67,7 @@ public class ExperimentStore {
 
 	/**
 	 * Read experiment results from JSON file and return the JSON.
+	 * 
 	 * @param id ID of the experiment
 	 */
 	public JSONObject readExperimentResultAsJson(int id) throws IOException, ParseException {
@@ -91,13 +93,14 @@ public class ExperimentStore {
 			resultJson = (JSONObject) parser.parse(jsonStr);
 		} catch (IOException | ParseException e) {
 			e.printStackTrace();
-			//TODO Add results with other error message
+			// TODO Add results with other error message
 		}
 		return resultJson;
 	}
 
 	/**
 	 * Return the path of the JSON file.
+	 * 
 	 * @param ID id of the experiment
 	 */
 	private File getFile(int id) {
@@ -105,8 +108,7 @@ public class ExperimentStore {
 	}
 
 	/**
-	 * Searches for existing experiment result files and returns the next free
-	 * ID.
+	 * Searches for existing experiment result files and returns the next free ID.
 	 * 
 	 * @return the next free experiment ID
 	 */
@@ -118,18 +120,20 @@ public class ExperimentStore {
 		File[] listOfFiles = folder.listFiles();
 
 		// find highest id
-		for (int i = 0; i < listOfFiles.length; i++) {
-			if (listOfFiles[i].isFile()) {
-				String filename = listOfFiles[i].getName();
-				String filenameWithoutExt = FilenameUtils.removeExtension(filename);
-				try {
+		if (listOfFiles != null) {
+			for (int i = 0; i < listOfFiles.length; i++) {
+				if (listOfFiles[i].isFile()) {
+					String filename = listOfFiles[i].getName();
+					String filenameWithoutExt = FilenameUtils.removeExtension(filename);
+					try {
 
-					int id = Integer.parseInt(filenameWithoutExt);
-					if (id > lastId) {
-						lastId = id;
+						int id = Integer.parseInt(filenameWithoutExt);
+						if (id > lastId) {
+							lastId = id;
+						}
+					} catch (NumberFormatException e) {
+						continue;
 					}
-				} catch (NumberFormatException e) {
-					continue;
 				}
 			}
 		}
