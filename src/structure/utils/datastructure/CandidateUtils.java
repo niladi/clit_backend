@@ -57,32 +57,43 @@ public class CandidateUtils {
 	 * @return
 	 */
 	public static Collection<PossibleAssignment> mergeCandidates(Collection<PossibleAssignment> existingCandidates,
-			Collection<PossibleAssignment> newCandidates) {
-		final Collection<PossibleAssignment> retCandidates = new ArrayList<>(
-				existingCandidates.size() + newCandidates.size());
-		final Map<String, PossibleAssignment> mapAssignments = new HashMap<>();
-		for (PossibleAssignment existingCandidate : existingCandidates) {
-			mapAssignments.put(existingCandidate.getAssignment(), existingCandidate);
-		}
+            Collection<PossibleAssignment> newCandidates) {
+        final Collection<PossibleAssignment> retCandidates = new ArrayList<>(
+                existingCandidates.size() + newCandidates.size());
+        final Map<String, PossibleAssignment> mapAssignments = new HashMap<>();
+        for (PossibleAssignment existingCandidate : existingCandidates) {
+            mapAssignments.put(existingCandidate.getAssignment(), existingCandidate);
+            retCandidates.add(existingCandidate);  // Add existing candidates to retCandidates
+        }
 
-		for (PossibleAssignment newCandidate : newCandidates) {
-			if (newCandidate == null) {
-				continue;
-			}
-			final PossibleAssignment oldCandidate;
-			if ((oldCandidate = mapAssignments.get(newCandidate.getAssignment())) == null) {
-				// Candidate didn't exist yet!
-				retCandidates.add(newCandidate);
-			} else {
-				// Candidate exists in both old and new lists... -> merge
-				final PossibleAssignment mergedCandidate = mergeCandidates(oldCandidate, newCandidate);
-				retCandidates.add(mergedCandidate);
-			}
-		}
-		retCandidates.addAll(existingCandidates);
-		retCandidates.addAll(newCandidates);
-		return retCandidates;
-	}
+        for (PossibleAssignment newCandidate : newCandidates) {
+            if (newCandidate == null) {
+                continue;
+            }
+            final PossibleAssignment oldCandidate;
+            if ((oldCandidate = mapAssignments.get(newCandidate.getAssignment())) == null) {
+                // Candidate didn't exist yet!
+                retCandidates.add(newCandidate);
+            } else {
+                // Candidate exists in both old and new lists... -> merge
+                final PossibleAssignment mergedCandidate = mergeCandidates(oldCandidate, newCandidate);
+                // Check if the merged candidate is already in retCandidates
+                boolean isAlreadyPresent = false;
+                for (PossibleAssignment candidate : retCandidates) {
+                    if (candidate.getAssignment().equals(mergedCandidate.getAssignment())) {
+                        isAlreadyPresent = true;
+                        break;
+                    }
+                }
+                // Add the merged candidate to retCandidates only if it's not already present
+                if (!isAlreadyPresent) {
+                    retCandidates.add(mergedCandidate);
+                }
+            }
+        }
+        return retCandidates;
+    }
+
 
 	public static PossibleAssignment mergeCandidates(PossibleAssignment oldCandidate, PossibleAssignment newCandidate) {
 		return mergeCandidates(oldCandidate, newCandidate, true);

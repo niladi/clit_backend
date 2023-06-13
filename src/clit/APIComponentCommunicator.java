@@ -306,12 +306,12 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 		// create task package that contains all information required by external
 		// components
 		final String request = LinkerUtils.documentToAPIJSON(document, pipelineConfig, componentId);
-
 		// send request
 		final String response = sendRequest(request);
 
 		// extract document from response
 		final AnnotatedDocument result = responseToDocument(response);
+
 		return result;
 	}
 

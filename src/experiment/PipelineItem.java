@@ -482,6 +482,7 @@ public class PipelineItem {
 		final CandidateGenerator candidateGenerator = (CandidateGenerator) getComponent();
 		final AnnotatedDocument docNewCandidates = candidateGenerator.generate(document);
 
+
 		// Updates candidates in "document" variable with the candidates from
 		// docNewCandidates
 		// Add the new candidates to the input document
