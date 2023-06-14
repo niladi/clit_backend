@@ -19,6 +19,7 @@ import clit.splitter.CopySplitter;
 import clit.translator.TranslatorDBpediaToWikidata;
 import clit.translator.TranslatorWikidataToDBpedia;
 import linking.candidategeneration.DBpediaLookupCandidateGenerator;
+import linking.candidategeneration.Falcon2CandidateGenerator;
 import linking.candidategeneration.WikidataDictCandidateGenerator;
 import linking.linkers.AidaLinker;
 import linking.linkers.BabelfyLinker;
@@ -153,6 +154,9 @@ public enum ExperimentSettings {
 		// DBpediaLookFinder
 		addComponent("DBpediaLookup", DBpediaLookupCandidateGenerator.class, EnumComponentType.CG);//
 
+		// Falcon 2.0 "topK"
+		addComponent("Falcon TopK", Falcon2CandidateGenerator.class, EnumComponentType.CG);//
+
 		// Translators
 		// DBpedia to Wikidata
 		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class, EnumComponentType.TRANSLATOR);
@@ -166,7 +170,6 @@ public enum ExperimentSettings {
 		// Splitters
 		// splitters: copy
 		addComponent("Copy", CopySplitter.class, EnumComponentType.SPLITTER);
-
 
 		// Load CLiT API components from the properties files
 		// for each of them instantiate an APIComponent which will then be used by
@@ -406,6 +409,48 @@ public enum ExperimentSettings {
 	}
 
 	/**
+	 * Returns a case insensitive copy of an unmodifiable MD map
+	 * 
+	 * @return case insensitive map <3
+	 */
+	public static Map<String, Class<? extends PipelineComponent>> getMDClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.MD);
+		retMap.putAll(namesAndClasses);
+		return retMap;
+	}
+
+	/**
+	 * Returns a case insensitive copy of an unmodifiable CG map
+	 * 
+	 * @return case insensitive map <3
+	 */
+	public static Map<String, Class<? extends PipelineComponent>> getCGClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.CG);
+		retMap.putAll(namesAndClasses);
+		return retMap;
+	}
+
+	/**
+	 * Returns a case insensitive copy of an unmodifiable ED map
+	 * 
+	 * @return case insensitive map <3
+	 */
+	public static Map<String, Class<? extends PipelineComponent>> getEDClassesCaseInsensitive() {
+		final Map<String, Class<? extends PipelineComponent>> retMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		// Get all SPLITTER names and then extract all the classes from Components
+		final Map<String, Class<? extends PipelineComponent>> namesAndClasses = getNamesAndClassesForType(
+				EnumComponentType.ED);
+		retMap.putAll(namesAndClasses);
+		return retMap;
+	}
+
+	/**
 	 * Return a collection of possible linkers
 	 * 
 	 * @return a copy of possible linkers
@@ -450,7 +495,7 @@ public enum ExperimentSettings {
 	 * @return a copy of possible filters
 	 */
 	public static Collection<? extends String> getFilterNames() {
-		if(INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER) == null)
+		if (INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER) == null)
 			return new HashSet<>();
 		return new HashSet<>(INSTANCE.mapTypeComponentNames.get(EnumComponentType.FILTER));
 		// return new HashSet<>(INSTANCE.filterClasses.keySet());

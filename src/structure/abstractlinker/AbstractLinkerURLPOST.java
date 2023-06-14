@@ -10,10 +10,11 @@ import java.util.function.BiFunction;
 
 import structure.config.kg.EnumModelType;
 import structure.datatypes.Mention;
-import structure.interfaces.linker.LinkerURLPOST;
+import structure.interfaces.linker.Linker;
+import structure.interfaces.linker.URLPOSTComponent;
 import structure.utils.FunctionUtils;
 
-public abstract class AbstractLinkerURLPOST extends AbstractLinkerURL implements LinkerURLPOST {
+public abstract class AbstractLinkerURLPOST extends AbstractLinkerURL implements URLPOSTComponent, Linker {
 
 	public AbstractLinkerURLPOST(EnumModelType KG) {
 		super(KG);

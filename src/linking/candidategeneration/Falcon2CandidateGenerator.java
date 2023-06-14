@@ -3,6 +3,8 @@ package linking.candidategeneration;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -20,25 +22,39 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.datatypes.PossibleAssignment;
 
-public class DBpediaLookupCandidateGenerator extends AbstractCandidateGenerator {
-
-	private final String searchURL = "https://lookup.dbpedia.org/api/search?format=JSON&query=";
+public class Falcon2CandidateGenerator extends AbstractCandidateGenerator {
+	/**
+	 * https://labs.tib.eu/falcon/falcon2/api-use
+	 */
+	private final String searchURL = "https://labs.tib.eu/falcon/falcon2/api?mode=long&k=";
 	private final EnumModelType KG;
+	private final int topKCount = 50;
+	private final String keycontent = "text";
 
-	public DBpediaLookupCandidateGenerator(final EnumModelType KG) {
+	public Falcon2CandidateGenerator(final EnumModelType KG) {
 		this.KG = KG;
 	}
 
 	public List<PossibleAssignment> generate(Mention mention) throws IOException {
 		final List<PossibleAssignment> candidates;
-		final String urlGET = searchURL + mention.getOriginalMention();
+		final String urlPOST = searchURL + String.valueOf(topKCount);
 		URL url;
 		try {
-			url = new URI(urlGET).toURL();
+			url = new URI(urlPOST).toURL();
 			final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setDoOutput(true);
-			conn.setRequestMethod("GET");
+			conn.setRequestMethod("POST");
 			conn.setRequestProperty("Content-Type", "application/json");
+			final OutputStream os = conn.getOutputStream();
+			final OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+			final JSONObject jsonRequest = new JSONObject();
+			// Generate candidates mention by mention
+			jsonRequest.accumulate(this.keycontent, mention.getMention());
+			osw.write(jsonRequest.toString());
+			osw.flush();
+			osw.close();
+			os.close(); // don't forget to close the OutputStream
+
 			conn.connect();
 
 			try (final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
@@ -68,30 +84,28 @@ public class DBpediaLookupCandidateGenerator extends AbstractCandidateGenerator 
 		if (jsonObject == null) {
 			return null;
 		}
-		// Key: "docs" -> JSONArray
-		// Subkeys: [score, refCount, resource, redirectlabel, typeName, comment, label,
-		// type, category]
 
-		final JSONArray jsonArrDocs = jsonObject.optJSONArray("docs");
+		// Key: "entities_wikidata" -> JSONArray
+		// Subkeys: ["surface form", "URI"]
+
+		final JSONArray jsonArrDocs = jsonObject.optJSONArray("entities_wikidata");
+		// surface form -> mention
+		// URI -> WD entity
 		if (jsonArrDocs == null) {
 			return null;
 		}
 
 		for (int i = 0; i < jsonArrDocs.length(); ++i) {
 			final JSONObject jsonObj = jsonArrDocs.optJSONObject(i);
-			final JSONArray jsonArrResource, jsonArrScore;
-			final String entity;
-			final Number score;
-
-			if (jsonObj == null || (jsonArrResource = jsonObj.optJSONArray("resource")) == null
-					|| jsonArrResource.length() == 0 || (entity = jsonArrResource.optString(0)) == null
-					|| (jsonArrScore = jsonObj.optJSONArray("score")) == null || jsonArrScore.length() == 0
-					|| (score = jsonArrScore.optDouble(0)) == null) {
+			final String mention = jsonObj.optString("surface form");
+			final String entity = jsonObj.optString("URI");
+			// System.out.println(mention + " -> " + entity);
+			if (jsonObj == null || mention == null || mention.length() == 0 || entity == null || entity.length() == 0) {
 				// Something wrong, so go to next one...
 				continue;
 			}
 
-			retList.add(new PossibleAssignment(entity, score));
+			retList.add(new PossibleAssignment(entity));
 		}
 
 		return retList;

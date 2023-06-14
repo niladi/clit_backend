@@ -1,6 +1,6 @@
 package structure.interfaces.linker;
 
-public interface LinkerURL extends Linker {
+public interface URLComponent {
 	static final String https = "https";
 	static final String http = "http";
 
@@ -9,14 +9,14 @@ public interface LinkerURL extends Linker {
 	 * 
 	 * @return
 	 */
-	public LinkerURL http();
+	public URLComponent http();
 
 	/**
 	 * Sets to HTTPS Scheme
 	 * 
 	 * @return
 	 */
-	public LinkerURL https();
+	public URLComponent https();
 
 	/**
 	 * Sets the base URL
@@ -24,14 +24,14 @@ public interface LinkerURL extends Linker {
 	 * @param url
 	 * @return
 	 */
-	public LinkerURL url(final String url);
+	public URLComponent url(final String url);
 
 	/**
 	 * 
 	 * @param suffix suffix to set for the URL
 	 * @return
 	 */
-	public LinkerURL suffix(final String suffix);
+	public URLComponent suffix(final String suffix);
 
 	/**
 	 * Set the timeout for this URL request. May be ignored by some linker while it
@@ -40,14 +40,14 @@ public interface LinkerURL extends Linker {
 	 * @param timeout
 	 * @return
 	 */
-	public LinkerURL timeout(final int timeout);
+	public URLComponent timeout(final int timeout);
 
 	/**
 	 * Set the port number to connect to
 	 * @param port to connect to
 	 * @return chaining pattern
 	 */
-	public LinkerURL port(final int port);
+	public URLComponent port(final int port);
 	
 	/**
 	 * Sets specific parameter with given value
@@ -56,6 +56,6 @@ public interface LinkerURL extends Linker {
 	 * @param paramValue value of the parameter
 	 * @return
 	 */
-	public LinkerURL setParam(final String paramName, final String paramValue);
+	public URLComponent setParam(final String paramName, final String paramValue);
 
 }

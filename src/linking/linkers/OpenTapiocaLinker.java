@@ -34,7 +34,8 @@ public class OpenTapiocaLinker extends AbstractLinkerURLPOST implements LinkerNI
 	@Override
 	public boolean init() {
 		https();
-		url("opentapioca.org");
+		//url("opentapioca.org");
+		url("opentapioca.wordlift.io");
 		suffix("/api/nif");
 		// suffix("/api/annotate");
 		return true;

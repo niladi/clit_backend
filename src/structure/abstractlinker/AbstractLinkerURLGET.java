@@ -8,9 +8,10 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import structure.config.kg.EnumModelType;
-import structure.interfaces.linker.LinkerURLGET;
+import structure.interfaces.linker.Linker;
+import structure.interfaces.linker.URLGETComponent;
 
-public abstract class AbstractLinkerURLGET extends AbstractLinkerURL implements LinkerURLGET {
+public abstract class AbstractLinkerURLGET extends AbstractLinkerURL implements URLGETComponent, Linker {
 
 	public AbstractLinkerURLGET(EnumModelType KG) {
 		super(KG);

@@ -70,16 +70,34 @@ public class ExperimentStore {
 	 * 
 	 * @param id ID of the experiment
 	 */
-	public JSONObject readExperimentResultAsJson(int id) throws IOException, ParseException {
+	public JSONObject readExperimentResultAsJson(final int id) throws IOException, ParseException {
+		return readExperimentResultAsJson(getFile(id));
+	}
+
+	/**
+	 * Read experiment results from JSON file and return the JSON.
+	 * 
+	 * @param filepath path of the experiment file
+	 */
+	public JSONObject readExperimentResultAsJson(final String filepath) throws IOException, ParseException {
+		return readExperimentResultAsJson(new File(filepath));
+	}
+
+	/**
+	 * Read experiment results from JSON file and return the JSON.
+	 * 
+	 * @param file Experiment file
+	 */
+	public static JSONObject readExperimentResultAsJson(final File file) throws IOException, ParseException {
 		// TODO Jackson
 		JSONParser jsonParser = new JSONParser();
-		FileReader reader = new FileReader(getFile(id));
+		FileReader reader = new FileReader(file);
 		Object obj = jsonParser.parse(reader);
 		JSONObject experimentResultsJson = (JSONObject) obj;
 		return experimentResultsJson;
 	}
 
-	public JSONObject createErrorResult(int experimentId, String errorMessage) {
+	public static JSONObject createErrorResult(int experimentId, String errorMessage) {
 		Experiment result = new Experiment(experimentId);
 		ExperimentTask experimentTask = new ExperimentTask(experimentId, errorMessage);
 		result.addExperimentTask(experimentTask);

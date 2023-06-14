@@ -15,9 +15,9 @@ import java.util.Set;
 
 import structure.config.constants.Strings;
 import structure.config.kg.EnumModelType;
-import structure.interfaces.linker.LinkerURL;
+import structure.interfaces.linker.URLComponent;
 
-public abstract class AbstractLinkerURL extends AbstractLinkerWebAPI implements LinkerURL {
+public abstract class AbstractLinkerURL extends AbstractLinkerWebAPI implements URLComponent {
 	protected final Map<String, String> params = new HashMap<>();
 	protected final String equalSymbol = "=";
 	protected final String ampersandSymbol = "&";
@@ -218,7 +218,7 @@ public abstract class AbstractLinkerURL extends AbstractLinkerWebAPI implements 
 	}
 
 	@Override
-	public LinkerURL port(final int port) {
+	public URLComponent port(final int port) {
 		this.port = port;
 		return this;
 	}

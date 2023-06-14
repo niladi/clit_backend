@@ -81,7 +81,6 @@ public class WikidataDictCandidateGenerator extends AbstractCandidateGenerator i
 				}
 				Object candidatesObj = jsonObject.get("candidates");
 				candidates = readLabels(candidatesObj);
-				System.out.println(candidates.toString());
 
 				return candidates;
 			}

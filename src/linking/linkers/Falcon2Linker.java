@@ -157,9 +157,26 @@ public class Falcon2Linker extends AbstractLinkerURLPOST {
 			final org.json.simple.JSONArray annotations = (org.json.simple.JSONArray) json.get("entities_wikidata");
 			int prevIndex = 0;
 			for (int i = 0; i < annotations.size(); ++i) {
-				final org.json.simple.JSONArray annotation = (org.json.simple.JSONArray) annotations.get(i);
-				final String mention = (String) annotation.get(0);
-				final String wikidataAssignment = TextUtils.stripArrowSigns(((String) annotation.get(1)));
+				System.out.println(annotations.get(i).getClass());
+				System.out.println(annotations.get(i));
+				final String mention;
+				final String wikidataAssignment;
+				if (annotations.get(i) instanceof org.json.simple.JSONObject) {
+					// new API mode on FALCON2.0's side
+					org.json.simple.JSONObject jsonAnn = (org.json.simple.JSONObject) annotations.get(i);
+					mention = (String) jsonAnn.get("surface form");
+					wikidataAssignment = TextUtils.stripArrowSigns(((String) jsonAnn.get("URI")));
+				} else if (annotations.get(i) instanceof org.json.simple.JSONArray) {
+					// old API mode on FALCON2.0's side...
+					// Keeping it to ensure compatibility just in case they decide to switch back at
+					// some point.
+					final org.json.simple.JSONArray annotation = (org.json.simple.JSONArray) annotations.get(i);
+					mention = (String) annotation.get(0);
+					wikidataAssignment = TextUtils.stripArrowSigns(((String) annotation.get(1)));
+				} else {
+					mention = "";
+					wikidataAssignment = "";
+				}
 
 				final int offset = text.indexOf(mention, prevIndex);
 				prevIndex = offset;
