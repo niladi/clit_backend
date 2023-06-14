@@ -27,7 +27,7 @@ import linking.linkers.DBpediaSpotlightLinker;
 import linking.linkers.EntityClassifierEULinker;
 import linking.linkers.FOXLinker;
 import linking.linkers.Falcon2Linker;
-import linking.linkers.OpenTapiocaLinker;
+import linking.linkers.OpenTapiocaLinkerWordlift;
 import linking.linkers.RadboudLinker;
 import linking.linkers.TagMeLinker;
 import linking.linkers.TextRazorLinker;
@@ -128,7 +128,8 @@ public enum ExperimentSettings {
 		addComponent("FOX", FOXLinker.class);
 
 		// OpenTapioca
-		addComponent("OpenTapioca", OpenTapiocaLinker.class);
+		// addComponent("OpenTapioca", OpenTapiocaLinker.class);
+		addComponent("OpenTapioca", OpenTapiocaLinkerWordlift.class);
 
 		// TagMe
 		addComponent("TagMe", TagMeLinker.class);
