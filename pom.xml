@@ -29,6 +29,17 @@
 		<guava.version>21.0</guava.version>
 	</properties>
 	<repositories>
+    <repository>
+      <id>missing-repo</id>
+      <name>Missing lib repo</name>
+      <url>file://${project.basedir}/lib</url>
+       <releases>
+         <checksumPolicy>ignore</checksumPolicy>
+       </releases>
+       <snapshots>
+         <checksumPolicy>ignore</checksumPolicy>
+       </snapshots>
+    </repository>
 		<repository>
 			<id>maven-restlet</id>
 			<name>Public online Restlet repository</name>
@@ -37,12 +48,12 @@
 		<repository>
 			<id>maven.aksw.internal</id>
 			<name>University Leipzig, AKSW Maven2 Repository</name>
-			<url>http://maven.aksw.org/archiva/repository/internal</url>
+			<url>https://maven.aksw.org/archiva/repository/internal</url>
 		</repository>
 		<repository>
 			<id>maven.aksw.snapshots</id>
 			<name>University Leipzig, AKSW Maven2 Repository</name>
-			<url>http://maven.aksw.org/archiva/repository/snapshots</url>
+			<url>https://maven.aksw.org/archiva/repository/snapshots</url>
 		</repository>
 	</repositories>
 
