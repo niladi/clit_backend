@@ -242,7 +242,7 @@
 		<dependency>
 			<groupId>info.debatty</groupId>
 			<artifactId>java-lsh</artifactId>
-			<version>RELEASE</version>
+			<version>0.12</version>
 		</dependency>
 		<!-- External sorting -->
 		<dependency>
@@ -300,11 +300,12 @@
 			<version>1.3.0</version>
 			<type>jar</type>
 		</dependency>
-		<dependency>
-			<groupId>com.github.haifengl</groupId>
-			<artifactId>smile-nlp</artifactId>
-			<version>1.2.0</version>
-		</dependency>
+    <!--duplicated-->
+		<!--<dependency>-->
+			<!--<groupId>com.github.haifengl</groupId>-->
+			<!--<artifactId>smile-nlp</artifactId>-->
+			<!--<version>1.2.0</version>-->
+		<!--</dependency>-->
 		<!-- Validator stuff -->
 		<!-- https://mvnrepository.com/artifact/commons-validator/commons-validator -->
 		<dependency>
@@ -369,25 +370,28 @@
 		</dependency>
 		<!-- ~~~~~~~~~~~~~~~~~~~ End Restlet for restful API ~~~~~~~~~~~~~~~~~~~~~~ -->
 		<!-- ~~~~~~~~~~~~~~~~~~~ Validating URIs ~~~~~~~~~~~~~~~~~~~~~~ -->
-		<dependency>
-			<groupId>commons-validator</groupId>
-			<artifactId>commons-validator</artifactId>
-			<version>1.4.0</version>
-		</dependency>
+    <!--newer version is ready included-->
+		<!--<dependency>-->
+			<!--<groupId>commons-validator</groupId>-->
+			<!--<artifactId>commons-validator</artifactId>-->
+			<!--<version>1.4.0</version>-->
+		<!--</dependency>-->
 		<!-- ~~~~~~~~~~~~~~~~~~~ End Validating URIs ~~~~~~~~~~~~~~~~~~~~~~ -->
 		<!-- ~~~~~~~~~~~~~~~~~~~ Cache for TripleIndex ~~~~~~~~~~~~~~~~~~~~~~ -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>18.0</version>
-		</dependency>
+    <!--newer version is ready included-->
+		<!--<dependency>-->
+			<!--<groupId>com.google.guava</groupId>-->
+			<!--<artifactId>guava</artifactId>-->
+			<!--<version>18.0</version>-->
+		<!--</dependency>-->
 		<!-- ~~~~~~~~~~~~~~~~~~~ End Cache for TripleIndex ~~~~~~~~~~~~~~~~~~~~~~ -->
-		<dependency>
-			<groupId>org.apache.solr</groupId>
-			<artifactId>solr-lucene-core</artifactId>
-			<version>1.3.0</version>
-			<type>jar</type>
-		</dependency>
+    <!--duplicated-->
+		<!--<dependency>-->
+			<!--<groupId>org.apache.solr</groupId>-->
+			<!--<artifactId>solr-lucene-core</artifactId>-->
+			<!--<version>1.3.0</version>-->
+			<!--<type>jar</type>-->
+		<!--</dependency>-->
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
@@ -453,11 +457,12 @@
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
 		<!-- WEKA for ML-related operations and classes -->
-		<dependency>
-			<groupId>nz.ac.waikato.cms.weka</groupId>
-			<artifactId>weka-stable</artifactId>
-			<version>3.8.0</version>
-		</dependency>
+    <!--newer version is ready included-->
+		<!--<dependency>-->
+			<!--<groupId>nz.ac.waikato.cms.weka</groupId>-->
+			<!--<artifactId>weka-stable</artifactId>-->
+			<!--<version>3.8.0</version>-->
+		<!--</dependency>-->
 		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
 		<dependency>
 			<groupId>com.opencsv</groupId>
