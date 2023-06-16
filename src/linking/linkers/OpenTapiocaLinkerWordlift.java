@@ -18,10 +18,13 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.common.collect.Lists;
+
 import structure.abstractlinker.AbstractLinker;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
 
 /**
  * https://github.com/informagi/REL
@@ -31,7 +34,7 @@ import structure.datatypes.Mention;
  */
 public class OpenTapiocaLinkerWordlift extends AbstractLinker {
 
-	private final String urlString = "\"https://opentapioca.wordlift.io/api/annotate\"";
+	private final String urlString = "https://opentapioca.wordlift.io/api/annotate";
 
 	public OpenTapiocaLinkerWordlift(final EnumModelType kg) {
 		super(kg);
@@ -66,13 +69,29 @@ public class OpenTapiocaLinkerWordlift extends AbstractLinker {
 					}
 				}
 				final JSONObject retJson = new JSONObject(sb.toString());
+				System.out.println("------------------------------------------");
 				final JSONArray annotations = retJson.optJSONArray("annotations");
-				// TODO: Finish parsing and create Mention objects which we then set to the
-				// AnnotatedDocument instance
+				System.out.println("-------------" + annotations);
+				List<Mention> mentionsList = new ArrayList<>(annotations.length());
+				for (int i = 0; i < annotations.length(); i++) {
+				    JSONObject annotation = annotations.getJSONObject(i);
+				    //String bestQid = annotation.optString("best_qid");
+				    double logLikelihood = annotation.optDouble("log_likelihood");
+				    int start = annotation.optInt("start");
+				    //int end = annotation.optInt("end");
+				    String bestTagLabel = annotation.optString("best_tag_label");
+				    if(bestTagLabel.equals((""))) continue;
+
+				    final Mention mention = new Mention(bestTagLabel,
+							Lists.newArrayList(new PossibleAssignment(null, logLikelihood)), start,
+							0.5f, bestTagLabel, bestTagLabel);
+				    mentionsList.add(mention);
+				}
+				document.setMentions(mentionsList);
 			}
 		}
 
-		return null;
+		return document;
 	}
 
 	@Override
