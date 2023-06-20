@@ -162,7 +162,7 @@ public class LauncherEvaluatorTester {
 				mapLinkerMetricContainers.put(linker.toString(), linkerMetricContainer);
 
 				// Explain evaluations
-				final String explanation = new PrecisionRecallF1Explainer().explain(evaluations);
+				//final String explanation = new PrecisionRecallF1Explainer().explain(evaluations);
 				//System.out.println(explanation);
 			}
 
