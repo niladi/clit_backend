@@ -69,9 +69,7 @@ public class OpenTapiocaLinkerWordlift extends AbstractLinker {
 					}
 				}
 				final JSONObject retJson = new JSONObject(sb.toString());
-				System.out.println("------------------------------------------");
 				final JSONArray annotations = retJson.optJSONArray("annotations");
-				System.out.println("-------------" + annotations);
 				List<Mention> mentionsList = new ArrayList<>(annotations.length());
 				for (int i = 0; i < annotations.length(); i++) {
 				    JSONObject annotation = annotations.getJSONObject(i);
@@ -83,7 +81,7 @@ public class OpenTapiocaLinkerWordlift extends AbstractLinker {
 				    if(bestTagLabel.equals((""))) continue;
 
 				    final Mention mention = new Mention(bestTagLabel,
-							Lists.newArrayList(new PossibleAssignment(null, logLikelihood)), start,
+							Lists.newArrayList(new PossibleAssignment(bestTagLabel, logLikelihood)), start,
 							0.5f, bestTagLabel, bestTagLabel);
 				    mentionsList.add(mention);
 				}
