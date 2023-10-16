@@ -87,23 +87,9 @@ public class PipelineBuilder extends PipelineInstantiationHelper {
 	 */
 	private void readStandardLinkerConfig(Pipeline pipeline) throws PipelineException {
 		String linkerName = (String) pipelineConfig.get("linker");
-		FullAnnotator annotator = null;
-		Class<? extends PipelineComponent> linkerClassName = ExperimentSettings.getLinkerClassesCaseInsensitive()
-				.get(linkerName);
-		try {
-			annotator = (FullAnnotator) linkerClassName// Class.forName(linkerClassName)
-					.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
-			String itemId = EnumComponentType.MD_CG_ED.id + "1";
-			pipeline.addMD_CG_ED(itemId, annotator);
-			pipeline.addConnection(Pipeline.KEY_INPUT_ITEM, itemId);
-			pipeline.addConnection(itemId, Pipeline.KEY_OUTPUT_ITEM);
-		} catch (ClassCastException e) {
-			throw new PipelineException("Annotator '" + linkerName + "' cannot be instantiated");
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new PipelineException(
-					"Error while instantiating the annotator '" + linkerName + "': " + e.getMessage());
-		}
+
+		instantiateStandardLinker(DEFAULT_KNOWLEDGEBASE, pipeline, linkerName, pipelineConfig);
+
 	}
 
 	/**

@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.apache.commons.validator.UrlValidator;
 import org.json.simple.JSONObject;
 
 import clit.APIComponent;
@@ -18,12 +17,62 @@ import structure.interfaces.clit.Translator;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
 import structure.interfaces.pipeline.Disambiguator;
+import structure.interfaces.pipeline.FullAnnotator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
 import structure.utils.Loggable;
-import structure.utils.NetUtils;
 
 public class PipelineInstantiationHelper implements Loggable {
+
+	/**
+	 * 
+	 * @param jsonPipeline
+	 * @param knowledgeBase
+	 * @param pipeline
+	 * @param linkerName
+	 * @param pipelineConfig
+	 * @param linkingComponentType
+	 * @param componentId
+	 * @param componentValue
+	 * @throws PipelineException
+	 */
+	protected void instantiateStandardLinker(final EnumModelType knowledgeBase, final Pipeline pipeline,
+			final String linkerName, JSONObject pipelineConfig) throws PipelineException {
+		FullAnnotator annotator = null;
+		final Class<? extends PipelineComponent> linkerClassName;
+
+		final boolean isValidURL = PipelineInstantiationHelper.isIPBasedComponent(linkerName);
+		String itemId = EnumComponentType.MD_CG_ED.id + "1";
+
+		if (isValidURL) {
+			// Instantiate a URL-based Standard Linker
+			try {
+				annotator = new APIComponentCommunicator(knowledgeBase, itemId, linkerName, pipelineConfig);
+			} catch (MalformedURLException e) {
+				throw new PipelineException(
+						"Error instatiating API standard linker '" + linkerName + "': " + e.getMessage());
+			}
+
+		} else {
+			// Instantiate a non-URL Standard Linker
+			try {
+				linkerClassName = ExperimentSettings.getLinkerClassesCaseInsensitive().get(linkerName);
+				annotator = (FullAnnotator) linkerClassName// Class.forName(linkerClassName)
+						.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+			} catch (ClassCastException e) {
+				throw new PipelineException("Annotator '" + linkerName + "' cannot be instantiated");
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new PipelineException(
+						"Error while instantiating the annotator '" + linkerName + "': " + e.getMessage());
+			}
+		}
+
+		pipeline.addMD_CG_ED(itemId, annotator);
+		pipeline.addConnection(Pipeline.KEY_INPUT_ITEM, itemId);
+		pipeline.addConnection(itemId, Pipeline.KEY_OUTPUT_ITEM);
+
+	}
 
 	/**
 	 * Add a linking component (MD, CG, ED, CG_ED) found in the pipeline config to
@@ -351,7 +400,7 @@ public class PipelineInstantiationHelper implements Loggable {
 	 * @param urlStr URL string to be checked whether it is actually a URL
 	 * @return
 	 */
-	private boolean isIPBasedComponent(final String urlStr) {
+	public static boolean isIPBasedComponent(final String urlStr) {
 		try {
 			new URL(urlStr);
 			return true;

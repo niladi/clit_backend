@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -206,8 +207,24 @@ public class LauncherEvaluatorTesterMentions {
 			final String linkerStringDelim = " & ";
 			final Combiner combiner = new UnionCombiner();// IntersectCombiner();//
 
-			final Map<String, List<AnnotationEvaluation>> mapEvaluations = combineSystemsPairwise(linkerStringDelim,
-					nifDocs, mapLinkerResults, combiner);
+			final boolean pairwiseOrAllPermutations = false;
+
+			final Map<String, List<AnnotationEvaluation>> mapEvaluations;
+			if (pairwiseOrAllPermutations) {
+
+				mapEvaluations = combineSystemsPairwise(linkerStringDelim, nifDocs, mapLinkerResults, combiner);
+			} else {
+				final Map<String, List<AnnotationEvaluation>> newMapEvaluations = new TreeMap<>();
+				final int depthToDo = mapLinkerResults.keySet().size()
+						//2
+						;
+				// final Map<String, List<AnnotationEvaluation>> recursivePermutationEvaluations
+				// = combineSystemResultPermutationsRecursive(
+				mapEvaluations = combineSystemResultPermutationsRecursive(depthToDo, new ArrayList<String>(),
+						newMapEvaluations, linkerStringDelim, nifDocs, mapLinkerResults, combiner);
+			}
+
+			// See "how is it when they are ALL combined into one document?"
 			final List<AnnotationEvaluation> allCombinedEvaluation = combineSystemsAll(linkerStringDelim, nifDocs,
 					mapLinkerResults, combiner);
 
@@ -240,9 +257,13 @@ public class LauncherEvaluatorTesterMentions {
 			for (mentionTruthMetricIndex = 0; mentionTruthMetricIndex <= 2; ++mentionTruthMetricIndex) {
 				int outputCounter = 0;
 				for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-					final String[] linkerNames = e.getKey().split(linkerStringDelim);
-					final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-					final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+					// final String[] linkerNames = e.getKey().split(linkerStringDelim);
+					//
+					// final String firstLinker =
+					// linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+					//
+					// final String secondLinker =
+					// linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 					final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 					final int mentionTextMetric = mentionTruthMetricValues.get(mentionTruthMetricIndex);
 
@@ -270,9 +291,9 @@ public class LauncherEvaluatorTesterMentions {
 			System.out.println("Outputting MD precision");
 			int outputCounter = 0;
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -303,9 +324,9 @@ public class LauncherEvaluatorTesterMentions {
 			System.out.println("Outputting MD recall");
 			outputCounter = 0;
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -335,9 +356,9 @@ public class LauncherEvaluatorTesterMentions {
 			outputCounter = 0;
 			System.out.println("Outputting MD F1");
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -404,6 +425,17 @@ public class LauncherEvaluatorTesterMentions {
 		}
 	}
 
+	/**
+	 * Combines systems' results in a pairwise fashion. <br>
+	 * It follows the idea: if we used two systems (out of all the listed systems in
+	 * mapEvaluations), what would the results be like?
+	 * 
+	 * @param linkerStringDelim
+	 * @param nifDocs
+	 * @param mapLinkerResults
+	 * @param combiner
+	 * @return
+	 */
 	private Map<String, List<AnnotationEvaluation>> combineSystemsPairwise(final String linkerStringDelim,
 			final List<Document> nifDocs, Map<String, List<AnnotatedDocument>> mapLinkerResults,
 			final Combiner combiner) {
@@ -434,6 +466,9 @@ public class LauncherEvaluatorTesterMentions {
 
 				for (int i = 0; i < docsSub.size(); ++i) {
 					final List<AnnotatedDocument> toCombine = Lists.newArrayList();
+					// docsMain and docsSub have the same size since it's the same annotated
+					// documents we are working with...
+					// And they are in the same order
 					toCombine.add(docsMain.get(i));
 					toCombine.add(docsSub.get(i));
 					final AnnotatedDocument combinedDoc = combiner.combine(toCombine);
@@ -443,6 +478,67 @@ public class LauncherEvaluatorTesterMentions {
 				mapEvaluations.put(key, evaluations);
 			}
 		}
+		return mapEvaluations;
+	}
+
+	/**
+	 * Recursively generates permutations and combines them, yielding evaluation
+	 * results
+	 * 
+	 * @param depthToDo         how deep to go (aka. how long should each
+	 *                          permutation be)
+	 * @param keysToDo
+	 * @param mapEvaluations
+	 * @param linkerStringDelim
+	 * @param nifDocs
+	 * @param mapLinkerResults
+	 * @param combiner
+	 * @return
+	 */
+	private Map<String, List<AnnotationEvaluation>> combineSystemResultPermutationsRecursive(final int depthToDo,
+			final List<String> keysToDo, final Map<String, List<AnnotationEvaluation>> mapEvaluations,
+			final String linkerStringDelim, final List<Document> nifDocs,
+			Map<String, List<AnnotatedDocument>> mapLinkerResults, final Combiner combiner) {
+
+		if (depthToDo > 0) {
+			// loop over all keys to be added
+			for (Entry<String, List<AnnotatedDocument>> eMain : mapLinkerResults.entrySet()) {
+				// final List<AnnotatedDocument> docsMain = eMain.getValue();
+				final String currentKey = eMain.getKey();
+				final List<String> newKeys = Lists.newArrayList(keysToDo);
+				newKeys.add(currentKey);
+				combineSystemResultPermutationsRecursive(depthToDo - 1, newKeys, mapEvaluations, linkerStringDelim,
+						nifDocs, mapLinkerResults, combiner);
+			}
+		}
+
+		// Now do the actual processing of the keys we have been given
+		if (keysToDo.size() > 0) {
+			final int numberOfDocuments = mapLinkerResults.get(keysToDo.get(0)).size();
+			// For each document, we take all the given keys
+			final List<AnnotatedDocument> annotatedDocs = Lists.newArrayList();
+			for (int i = 0; i < numberOfDocuments; ++i) {
+				final List<AnnotatedDocument> toCombine = Lists.newArrayList();
+				for (String key : keysToDo) {
+					final List<AnnotatedDocument> keyDocuments = mapLinkerResults.get(key);
+					final AnnotatedDocument annDoc = keyDocuments.get(i);
+					toCombine.add(annDoc);
+				}
+				final AnnotatedDocument combinedDoc = combiner.combine(toCombine);
+				annotatedDocs.add(combinedDoc);
+			}
+
+			// Generate key
+			String key = keysToDo.get(0);
+			for (int i = 1; i < keysToDo.size(); ++i) {
+				// String doneKey : keysToDo)
+				key += linkerStringDelim + keysToDo.get(i);
+			}
+			System.out.println("Computed for Key [" + key + "]");
+			final List<AnnotationEvaluation> evaluations = new NIFBaseEvaluator().evaluate(nifDocs, annotatedDocs);
+			mapEvaluations.put(key, evaluations);
+		}
+
 		return mapEvaluations;
 	}
 
