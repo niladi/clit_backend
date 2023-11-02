@@ -1,5 +1,6 @@
 package clit.eval;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -121,6 +123,13 @@ public class LauncherEvaluatorTesterMentions {
 			final String serializationDirectoryPath = baseDir + "serializations/" + datasetFileNameUnderscores + "/";
 			final File serializationDirectory = new File(serializationDirectoryPath);
 			final File labelsDirectory = new File(labelsDirPath);
+			final String pathSerializationCombinedEvaluations;
+			final String pathOutputEvals = baseDir + "evaluations.txt";
+			// TODO: Now change annotated document returned by linkers (by union combiner)
+			// and add mentions from multiple systems together to see how that would look
+			// Display all in a table
+			final String linkerStringDelim = " & ";
+			final Combiner combiner = new UnionCombiner();// IntersectCombiner();//
 
 			if (!serializationDirectory.exists()) {
 				serializationDirectory.mkdirs();
@@ -197,15 +206,17 @@ public class LauncherEvaluatorTesterMentions {
 				// System.out.println(explanation);
 			}
 
+			//
+			final int depthToDo = 3
+			// mapLinkerResults.keySet().size()
+			// 2
+			;
+
+			pathSerializationCombinedEvaluations = generateMapEvalSerializationPath(baseDir, depthToDo, combiner);
+
 			// Used simply for output formatting to create figures...
 			final String[] linkerPossibilitiesForOutput = new String[] { "Babelfy", "DBpediaSpotlight", "FOX",
 					"OpenTapioca", "TextRazor" };
-
-			// TODO: Now change annotated document returned by linkers (by union combiner)
-			// and add mentions from multiple systems together to see how that would look
-			// Display all in a table
-			final String linkerStringDelim = " & ";
-			final Combiner combiner = new UnionCombiner();// IntersectCombiner();//
 
 			final boolean pairwiseOrAllPermutations = false;
 
@@ -215,13 +226,17 @@ public class LauncherEvaluatorTesterMentions {
 				mapEvaluations = combineSystemsPairwise(linkerStringDelim, nifDocs, mapLinkerResults, combiner);
 			} else {
 				final Map<String, List<AnnotationEvaluation>> newMapEvaluations = new TreeMap<>();
-				final int depthToDo = mapLinkerResults.keySet().size()
-						//2
-						;
 				// final Map<String, List<AnnotationEvaluation>> recursivePermutationEvaluations
 				// = combineSystemResultPermutationsRecursive(
-				mapEvaluations = combineSystemResultPermutationsRecursive(depthToDo, new ArrayList<String>(),
-						newMapEvaluations, linkerStringDelim, nifDocs, mapLinkerResults, combiner);
+				final Map<String, List<AnnotationEvaluation>> tmpMapEvaluations = deserializeMapAnnotationEvaluations(
+						pathSerializationCombinedEvaluations);
+				if (tmpMapEvaluations == null || tmpMapEvaluations.size() < 1) {
+					mapEvaluations = combineSystemResultPermutationsRecursive(depthToDo, new ArrayList<String>(),
+							newMapEvaluations, linkerStringDelim, nifDocs, mapLinkerResults, combiner);
+					serialize(pathSerializationCombinedEvaluations, mapEvaluations);
+				} else {
+					mapEvaluations = tmpMapEvaluations;
+				}
 			}
 
 			// See "how is it when they are ALL combined into one document?"
@@ -291,9 +306,11 @@ public class LauncherEvaluatorTesterMentions {
 			System.out.println("Outputting MD precision");
 			int outputCounter = 0;
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				// final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				// final String firstLinker =
+				// linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				// final String secondLinker =
+				// linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -324,9 +341,11 @@ public class LauncherEvaluatorTesterMentions {
 			System.out.println("Outputting MD recall");
 			outputCounter = 0;
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				// final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				// final String firstLinker =
+				// linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				// final String secondLinker =
+				// linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -356,9 +375,11 @@ public class LauncherEvaluatorTesterMentions {
 			outputCounter = 0;
 			System.out.println("Outputting MD F1");
 			for (Entry<String, List<AnnotationEvaluation>> e : mapEvaluations.entrySet()) {
-				//final String[] linkerNames = e.getKey().split(linkerStringDelim);
-				//final String firstLinker = linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
-				//final String secondLinker = linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
+				// final String[] linkerNames = e.getKey().split(linkerStringDelim);
+				// final String firstLinker =
+				// linkerNames[0].substring(linkerNames[0].lastIndexOf(".") + 1);
+				// final String secondLinker =
+				// linkerNames[1].substring(linkerNames[1].lastIndexOf(".") + 1);
 				final List<Integer> mentionTruthMetricValues = computeMentionTP_FP_FN(e.getValue());
 				final int mentionTextTP = mentionTruthMetricValues.get(0);
 				final int mentionTextFP = mentionTruthMetricValues.get(1);
@@ -415,7 +436,7 @@ public class LauncherEvaluatorTesterMentions {
 			// Checking whether serialization worked properly and we can deserialize
 			// --------------------------------------------------------------------------
 			for (Linker linker : linkers) {
-				final List<AnnotatedDocument> annotatedDocs = deserialize(mapLinkerSerialization.get(linker));
+				final List<AnnotatedDocument> annotatedDocs = deserializeDocuments(mapLinkerSerialization.get(linker));
 				System.out.println("Deserialised documents: " + annotatedDocs.size());
 			}
 
@@ -423,6 +444,10 @@ public class LauncherEvaluatorTesterMentions {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private String generateMapEvalSerializationPath(String baseDir, int depthToDo, Combiner combiner) {
+		return baseDir + "serializations/" + depthToDo + "_" + combiner.getClass().toString() + "_map_evaluations.raw";
 	}
 
 	/**
@@ -618,7 +643,7 @@ public class LauncherEvaluatorTesterMentions {
 		if (annotatedDocsRawPath != null && (foundAnnotatedDocuments = new File(annotatedDocsRawPath).exists())) {
 			// We have the results --> take results from that (aka. deserialise it)
 			System.out.println("[" + linker.toString() + "] Reusing existing results.");
-			annotatedDocs = deserialize(annotatedDocsRawPath);
+			annotatedDocs = deserializeDocuments(annotatedDocsRawPath);
 			if (annotatedDocs == null || annotatedDocs.size() == 0) {
 				// There is likely sth. wrong... so let's annotate anew and re-serialise!
 				foundAnnotatedDocuments = false;
@@ -775,6 +800,36 @@ public class LauncherEvaluatorTesterMentions {
 		return path;
 	}
 
+	private static void serialize(final String outPath, final Map<String, List<AnnotationEvaluation>> obj) {
+		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(outPath)))) {
+			System.out.println("Serializing annotation evaluations");
+			oos.writeObject(obj);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private static void outputEvaluationsToFile(final Map<String, Serializable> mapEvals,
+			final String pathOutputEvals) {
+		try (final BufferedWriter bwOut = new BufferedWriter(new FileOutputStream(new File(pathOutputEvals)))) {
+			for (Entry<String, Serializable> e : mapEvals.entrySet()) {
+
+			}
+		}
+	}
+
+	private static Map<String, List<AnnotationEvaluation>> deserializeMapAnnotationEvaluations(final String inPath) {
+		try (final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(inPath)))) {
+			System.out.println("Deserialising annotation evaluations");
+			return (Map<String, List<AnnotationEvaluation>>) ois.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new HashMap<String, List<AnnotationEvaluation>>();
+	}
+
 	private static void serialize(final String outPath, final List<AnnotatedDocument> annotatedDocs) {
 		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(outPath)))) {
 			oos.writeObject(annotatedDocs);
@@ -784,7 +839,7 @@ public class LauncherEvaluatorTesterMentions {
 		}
 	}
 
-	private static List<AnnotatedDocument> deserialize(final String inPath) {
+	private static List<AnnotatedDocument> deserializeDocuments(final String inPath) {
 		try (final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(inPath)))) {
 			return (List<AnnotatedDocument>) ois.readObject();
 		} catch (IOException | ClassNotFoundException e) {
