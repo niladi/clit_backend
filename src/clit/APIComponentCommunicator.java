@@ -60,7 +60,10 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 		this.componentId = componentId;
 		init();
 	}
-
+	@Override
+	public AnnotatedDocument generateDisambiguate(AnnotatedDocument document) throws Exception {
+		return annotate(document);
+	}
 	@Override
 	public boolean init() {
 		// TODO This is kind of reverse engineered, following the interfaces. Find a

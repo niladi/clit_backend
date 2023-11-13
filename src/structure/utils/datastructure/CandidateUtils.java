@@ -62,6 +62,7 @@ public class CandidateUtils {
                 existingCandidates.size() + newCandidates.size());
         final Map<String, PossibleAssignment> mapAssignments = new HashMap<>();
         for (PossibleAssignment existingCandidate : existingCandidates) {
+        	if (existingCandidate == null) continue;
             mapAssignments.put(existingCandidate.getAssignment(), existingCandidate);
             retCandidates.add(existingCandidate);  // Add existing candidates to retCandidates
         }
