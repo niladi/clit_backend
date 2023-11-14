@@ -13,6 +13,7 @@ import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.Evaluator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
+import structure.interfaces.pipeline.Typing;
 
 /**
  * Defines the type of a component, i.e. what is the component capable of.
@@ -29,16 +30,17 @@ public enum EnumComponentType {
 	MD(MentionDetector.class, "MD", "md", "Mention Detector"),
 	CG(CandidateGenerator.class, "CG", "cg", "Candidate Generator"),
 	ED(Disambiguator.class, "ED", "ed", "Disambiguator"), //
+	NER(Typing.class, "NER", "ner", "Entity Typing"),
 	CG_ED(CandidateGeneratorDisambiguator.class, "CG_ED", "cg_ed", "Candidate Generator Disambiguator"), //
 	MD_CG_ED(Linker.class, "MD_CG_ED", "md_cg_ed", "Full"), //
 	COMBINER(Combiner.class, "CO", "combiner", "Combiner"), //
 	SPLITTER(Splitter.class, "SP", "splitter", "Splitter"), //
 	TRANSLATOR(Translator.class, "TR", "translator", "Translator"), //
 	TRANSFORMER(Transformer.class, "TRF", "transformer", "Transformer"), //
-	FILTER(Filter.class, "FI", "filter", "Filter"),//
-	EVALUATOR(Evaluator.class, "EVAL", "evaluator", "Evaluator"),//
+	FILTER(Filter.class, "FI", "filter", "Filter"), //
+	EVALUATOR(Evaluator.class, "EVAL", "evaluator", "Evaluator"), //
 	EXPLAINER(Explainer.class, "EXPL", "explainer", "Explainer"),//
-	
+
 	;
 
 	public final Class<? extends PipelineComponent> type;
@@ -46,7 +48,8 @@ public enum EnumComponentType {
 	public final String name;
 	public final String displayName;
 
-	EnumComponentType(final Class<? extends PipelineComponent> clazz, final String id, final String name, final String displayName) {
+	EnumComponentType(final Class<? extends PipelineComponent> clazz, final String id, final String name,
+			final String displayName) {
 		this.type = clazz;
 		this.id = id;
 		this.name = name;

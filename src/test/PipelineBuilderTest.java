@@ -1,4 +1,3 @@
-package test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,7 +26,8 @@ import structure.interfaces.pipeline.PipelineComponent;
 public class PipelineBuilderTest {
 
 	private static final String PATH = "test/resources/";
-	private static final Map<String, Class<? extends PipelineComponent>> LINKER_CLASSES = ExperimentSettings.getLinkerClassesCaseInsensitive();
+	private static final Map<String, Class<? extends PipelineComponent>> LINKER_CLASSES = ExperimentSettings
+			.getLinkerClassesCaseInsensitive();
 
 	private static enum TestFileEnum {
 		STANDARD_LINKER("standard_linker.json"), //

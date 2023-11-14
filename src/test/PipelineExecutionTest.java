@@ -1,4 +1,3 @@
-package test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -41,6 +40,8 @@ public class PipelineExecutionTest {
 		COMPLEX_PIPELINE_TWO_CG_ED_SP_CO("complex_pipeline_with_two_cg_ed_and_splitter_and_combiner.json"), //
 		COMPLEX_PIPELINE_DEFAULT("complex_pipeline_with_md_cg_ed.json"), //
 		COMPLEX_PIPELINE_MD_CG("complex_md_cg_only.json"), //
+		COMPLEX_REFINED("complex_refined.json"), //
+		COMPLEX_REFINED_NO_MD("complex_refined_no_md.json"), //
 
 		;
 
@@ -180,6 +181,32 @@ public class PipelineExecutionTest {
 	@Test
 	public void testComplexPipelineWithTwoCgEdAndSplitterAndCombiner() throws PipelineException {
 		JSONObject json = loadPipelineJson(TestFileEnum.COMPLEX_PIPELINE_TWO_CG_ED_SP_CO.path);
+		PipelineBuilder builder = new PipelineBuilder(json, null);
+		Pipeline pipeline = builder.buildPipeline();
+		pipeline.execute(DOCUMENT);
+		Collection<AnnotatedDocument> result = pipeline.getResults(DOCUMENT);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		Collection<Mention> mentions = result.iterator().next().getMentions();
+		assertNotNull(mentions);
+	}
+
+	@Test
+	public void testReFinED() throws PipelineException {
+		JSONObject json = loadPipelineJson(TestFileEnum.COMPLEX_REFINED.path);
+		PipelineBuilder builder = new PipelineBuilder(json, null);
+		Pipeline pipeline = builder.buildPipeline();
+		pipeline.execute(DOCUMENT);
+		Collection<AnnotatedDocument> result = pipeline.getResults(DOCUMENT);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		Collection<Mention> mentions = result.iterator().next().getMentions();
+		assertNotNull(mentions);
+	}
+
+	@Test
+	public void testReFinEDnoMD() throws PipelineException {
+		JSONObject json = loadPipelineJson(TestFileEnum.COMPLEX_REFINED_NO_MD.path);
 		PipelineBuilder builder = new PipelineBuilder(json, null);
 		Pipeline pipeline = builder.buildPipeline();
 		pipeline.execute(DOCUMENT);

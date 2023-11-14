@@ -1,4 +1,3 @@
-package test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,6 +21,5 @@ public class ExperimentStoreTest {
 		store.writeExperimentResultToJsonFile(experiment2);
 		assertEquals(id + 1, store.getLastExperimentId());
 	}
-	
 
 }

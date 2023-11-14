@@ -33,6 +33,7 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	protected Collection<PossibleAssignment> possibleAssignments;
 	protected String originalMention;
 	protected String originalWithoutStopwords;
+	private Collection<EntityType> types;
 
 	public Mention() {
 	}
@@ -176,6 +177,14 @@ public class Mention implements Cloneable, Loggable, Serializable {
 		// + this.possibleAssignments + "} ]";
 		return "[" + getMention() + " (chosen{" + (this.assignment == null ? "" : this.assignment) + "}" + ", possible{"
 				+ this.possibleAssignments + "})]";
+	}
+
+	public Collection<EntityType> getTypes() {
+		return types;
+	}
+
+	public void setTypes(Collection<EntityType> types) {
+		this.types = types;
 	}
 
 	/**

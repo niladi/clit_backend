@@ -1,0 +1,43 @@
+{
+    "exampleId": "md_combined_cged",
+    "displayName": "MD + combined CG-ED",
+    "id": 1,
+    "pipelineConfigType": "complex",
+    "components": {
+        "md": [
+            {
+                "id": "MD1",
+                "value": "Babelfy"
+            }
+        ],
+        "cg_ed": [],
+        "cg": [
+            {
+                "id": "CG1",
+                "value": "http://localhost:5002"
+            }
+        ],
+        "ed": [
+            {
+                "id": "ED1",
+                "value": "http://localhost:5003"
+            }
+        ]
+    },
+    "connections": [
+        {
+            "source": "MD1",
+            "target": "CG1"
+        },
+        {
+            "source": "CG1",
+            "target": "ED1"
+        }
+    ],
+    "startComponents": [
+        "MD1"
+    ],
+    "endComponents": [
+        "ED1"
+    ]
+}

@@ -32,10 +32,11 @@ import structure.interfaces.clit.Translator;
 import structure.interfaces.pipeline.CandidateGenerator;
 import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
+import structure.interfaces.pipeline.Typing;
 import structure.utils.LinkerUtils;
 
 public class APIComponentCommunicator extends AbstractLinkerURLPOST
-		implements Combiner, Translator, Filter, Splitter, MentionDetector, CandidateGenerator, Disambiguator {
+		implements Combiner, Translator, Filter, Splitter, MentionDetector, CandidateGenerator, Disambiguator, Typing {
 
 	final URL urlObj;
 	private final String keywordContent = "content";
@@ -89,12 +90,12 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 		return annotate(document);
 	}
 
-//	@Override
-//	public AnnotatedDocument generate(final AnnotatedDocument document) {
-//		// TODO Auto-generated method stub
-//		System.out.println("API Generate (candidates#2)!");
-//		return null;
-//	}
+	// @Override
+	// public AnnotatedDocument generate(final AnnotatedDocument document) {
+	// // TODO Auto-generated method stub
+	// System.out.println("API Generate (candidates#2)!");
+	// return null;
+	// }
 
 	@Override
 	public AnnotatedDocument detect(final AnnotatedDocument document) throws Exception {
@@ -336,5 +337,10 @@ public class APIComponentCommunicator extends AbstractLinkerURLPOST
 
 		getLogger().error("No parameter passed to POST request...");
 		return null;
+	}
+
+	@Override
+	public AnnotatedDocument ner(AnnotatedDocument document) throws Exception {
+		return annotate(document);
 	}
 }
