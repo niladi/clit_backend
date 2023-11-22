@@ -14,6 +14,7 @@ public enum EnumPipelineType {
 	MD("md", "Mention detection"), //
 	CG("cg", "Candidate generation"), //
 	ED("ed", "Entity disambiguation"), //
+	NER("ner", "Entity typing"), //
 	MD_CG("md_cg", "Mention detection and candidate generation"), //
 	CG_ED("cg_ed", "Candidate generation and entity disambiguation"), //
 	FULL("full", "Mention detection, candidate generation and entity disambiguation")//

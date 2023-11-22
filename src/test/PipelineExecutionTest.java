@@ -1,6 +1,8 @@
+package test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
@@ -18,6 +20,7 @@ import experiment.ExperimentSettings;
 import experiment.Pipeline;
 import experiment.PipelineBuilder;
 import structure.datatypes.AnnotatedDocument;
+import structure.datatypes.EntityType;
 import structure.datatypes.Mention;
 import structure.exceptions.PipelineException;
 import structure.interfaces.pipeline.PipelineComponent;
@@ -42,6 +45,7 @@ public class PipelineExecutionTest {
 		COMPLEX_PIPELINE_MD_CG("complex_md_cg_only.json"), //
 		COMPLEX_REFINED("complex_refined.json"), //
 		COMPLEX_REFINED_NO_MD("complex_refined_no_md.json"), //
+		COMPLEX_NER("complex_ner.json"), //
 
 		;
 
@@ -212,9 +216,27 @@ public class PipelineExecutionTest {
 		pipeline.execute(DOCUMENT);
 		Collection<AnnotatedDocument> result = pipeline.getResults(DOCUMENT);
 		assertNotNull(result);
+		assertSame(1, result.size());
+		Collection<Mention> mentions = result.iterator().next().getMentions();
+		assertNotNull(mentions);
+
+	}
+
+	@Test
+	public void testNer() throws PipelineException {
+		JSONObject json = loadPipelineJson(TestFileEnum.COMPLEX_NER.path);
+		PipelineBuilder builder = new PipelineBuilder(json, null);
+		Pipeline pipeline = builder.buildPipeline();
+		pipeline.execute(DOCUMENT);
+		Collection<AnnotatedDocument> result = pipeline.getResults(DOCUMENT);
+		assertNotNull(result);
 		assertEquals(1, result.size());
 		Collection<Mention> mentions = result.iterator().next().getMentions();
 		assertNotNull(mentions);
+		assertSame(2, mentions.size());
+		Collection<EntityType> types = mentions.stream().findFirst().get().getEntityTypes();
+		assertNotNull(types);
+		assertSame(1, types.size());
 	}
 
 	@Test

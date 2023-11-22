@@ -34,6 +34,7 @@ public class Pipeline {
 	private boolean hasMD = false;
 	private boolean hasCG = false;
 	private boolean hasED = false;
+	private boolean hasNER = false;
 	private JSONObject json = null;
 
 	/**
@@ -45,7 +46,8 @@ public class Pipeline {
 	public Pipeline() {
 		this.inputItem = addItem(KEY_INPUT_ITEM, new PipelineComponent() {
 			/**
-			 * Set the (unchanged) input document as result such that following components can grab and process it.
+			 * Set the (unchanged) input document as result such that following components
+			 * can grab and process it.
 			 */
 			@Override
 			public Collection<AnnotatedDocument> execute(final PipelineItem callItem,
@@ -57,7 +59,8 @@ public class Pipeline {
 			}
 		}, EnumComponentType.INPUT, EnumPipelineType.NONE);
 
-		// end should be the results, likely have no appropriate component to execute and be (in)directly connected to
+		// end should be the results, likely have no appropriate component to execute
+		// and be (in)directly connected to
 		// all the previous steps
 		this.outputItem = addItem(KEY_OUTPUT_ITEM, new PipelineComponent() {
 			/**
@@ -71,7 +74,8 @@ public class Pipeline {
 				// combine the results of the multiple precedents
 				return callItem.getCopyOfAllDependencyResults();
 			}
-			// the EnumPipelineType of output is update in the PipelineBuilder after all components were added
+			// the EnumPipelineType of output is update in the PipelineBuilder after all
+			// components were added
 		}, EnumComponentType.OUTPUT, EnumPipelineType.NONE);
 	}
 
@@ -118,6 +122,21 @@ public class Pipeline {
 	public PipelineItem addMD(final String ID, final PipelineComponent component) {
 		this.hasMD = true;
 		return addItem(ID, component, EnumComponentType.MD, EnumPipelineType.MD);
+	}
+
+	/**
+	 * Adds an MD node to the graph<br>
+	 * Difference compared to {@link #addItem(String, PipelineComponent)}:<br>
+	 * This method makes the component behave in the default specified way, as
+	 * specified in the switch-case in PipelineItem
+	 * 
+	 * @param ID        string identifier
+	 * @param component component which will be executed
+	 * @return
+	 */
+	public PipelineItem addNER(final String ID, final PipelineComponent component) {
+		this.hasNER = true;
+		return addItem(ID, component, EnumComponentType.NER, EnumPipelineType.NER);
 	}
 
 	/**
@@ -362,7 +381,8 @@ public class Pipeline {
 
 	public void setPipelineType(EnumPipelineType pipelineType) {
 		this.pipelineType = pipelineType;
-		// The task type of the output item must always be equal to the task type of the whole pipeline
+		// The task type of the output item must always be equal to the task type of the
+		// whole pipeline
 		this.outputItem.setPipelineType(pipelineType);
 	}
 
@@ -391,9 +411,12 @@ public class Pipeline {
 	}
 
 	/**
-	 * Returns the results of the pipeline as annotated documents. The list contains one document for each component
-	 * that was linked to the final component (intermediate results). Each document has an attribute with the ID of the
-	 * component whose result it is and which task was solved at this step (MD, CG or ED).
+	 * Returns the results of the pipeline as annotated documents. The list contains
+	 * one document for each component
+	 * that was linked to the final component (intermediate results). Each document
+	 * has an attribute with the ID of the
+	 * component whose result it is and which task was solved at this step (MD, CG
+	 * or ED).
 	 * 
 	 * @return Collection of annotated documents
 	 */
@@ -442,9 +465,11 @@ public class Pipeline {
 	/**
 	 * Determines which tasks the pipeline is capable of.
 	 * 
-	 * Can be called also during building the pipeline, when not all components were added yet. It returns the task
+	 * Can be called also during building the pipeline, when not all components were
+	 * added yet. It returns the task
 	 * type of the respective component then.
-	 * TODO Sure? What if first a CG_ED was added, and then an MD? Wouldn't the MD get task type "ED" then as well?
+	 * TODO Sure? What if first a CG_ED was added, and then an MD? Wouldn't the MD
+	 * get task type "ED" then as well?
 	 * 
 	 * @param pipeline
 	 * @return Task type of the pipeline
@@ -460,8 +485,9 @@ public class Pipeline {
 				}
 			} else {
 				if (hasED()) {
-					//throw new PipelineException("Pipeline capable of mention detection and entity"
-					//		+ "disambiguation but not of candidate generation");
+					// throw new PipelineException("Pipeline capable of mention detection and
+					// entity"
+					// + "disambiguation but not of candidate generation");
 					return EnumPipelineType.ED;
 				} else {
 					return EnumPipelineType.MD;
@@ -478,7 +504,7 @@ public class Pipeline {
 				if (hasED()) {
 					return EnumPipelineType.ED;
 				} else {
-					//throw new PipelineException("Pipeline isn't capable of any task type");
+					// throw new PipelineException("Pipeline isn't capable of any task type");
 					return EnumPipelineType.NONE;
 				}
 			}

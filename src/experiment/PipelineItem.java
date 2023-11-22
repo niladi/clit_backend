@@ -23,6 +23,7 @@ import structure.interfaces.pipeline.CandidateGeneratorDisambiguator;
 import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
+import structure.interfaces.pipeline.Typing;
 import structure.utils.datastructure.CandidateUtils;
 import structure.utils.datastructure.MentionUtils;
 
@@ -277,43 +278,46 @@ public class PipelineItem {
 					// System.out.println("Exec type: " + getType());
 					EnumComponentType type = getType();
 					switch (type) {
-					case INPUT:
-					case OUTPUT:
-						results = getComponent().execute(this, document);
-						break;
-					case MD:
-						results = md();
-						break;
-					case CG:
-						results = cg();
-						break;
-					case CG_ED:
-						results = cg_ed();
-						break;
-					case ED:
-						results = ed();
-						break;
-					case MD_CG_ED:
-						results = md_cg_ed();
-						break;
-					case COMBINER:
-						results = combine();
-						break;
-					case SPLITTER:
-						results = split();
-						break;
-					case FILTER:
-						results = filter();
-						break;
-					case TRANSLATOR:
-						results = translate();
-						break;
-					case TRANSFORMER:
-					case UNSPECIFIED:
-					default:
-						// System.out.println("DEFAULT CASE: Specific execution.");
-						results = getComponent().execute(this, document);
-						break;
+						case INPUT:
+						case OUTPUT:
+							results = getComponent().execute(this, document);
+							break;
+						case MD:
+							results = md();
+							break;
+						case NER:
+							results = ner();
+							break;
+						case CG:
+							results = cg();
+							break;
+						case CG_ED:
+							results = cg_ed();
+							break;
+						case ED:
+							results = ed();
+							break;
+						case MD_CG_ED:
+							results = md_cg_ed();
+							break;
+						case COMBINER:
+							results = combine();
+							break;
+						case SPLITTER:
+							results = split();
+							break;
+						case FILTER:
+							results = filter();
+							break;
+						case TRANSLATOR:
+							results = translate();
+							break;
+						case TRANSFORMER:
+						case UNSPECIFIED:
+						default:
+							// System.out.println("DEFAULT CASE: Specific execution.");
+							results = getComponent().execute(this, document);
+							break;
 					}
 
 				} catch (Exception e) {
@@ -437,6 +441,28 @@ public class PipelineItem {
 	 * detection. There must be only one dependency (a single previous component)
 	 * and a single result of this dependency.<br>
 	 */
+	private Collection<AnnotatedDocument> ner() throws Exception {
+		if (!EnumComponentType.NER.isInstance(getComponent()))
+			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
+
+		// Grab a copy to not overwrite the original
+		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
+		// Get the mention detector component
+		final Typing typer = (Typing) getComponent();
+		final AnnotatedDocument documentNer = typer.ner(document);
+
+		document.setMentions(MentionUtils.mergeEntityTypes(document.getMentions(), documentNer.getMentions()));
+		return documentNer.makeMultiDocuments();
+	}
+
+	/**
+	 * <b>Important Note</b>: This method will ONLY update the MENTIONS of the data
+	 * structure aka. the textual mention along with startOffset etc., but not the
+	 * candidates nor the disambiguated entity<br>
+	 * Get the result of the previous component (dependency) and execute the mention
+	 * detection. There must be only one dependency (a single previous component)
+	 * and a single result of this dependency.<br>
+	 */
 	private Collection<AnnotatedDocument> md() throws Exception {
 		if (!EnumComponentType.MD.isInstance(getComponent()))
 			throw new RuntimeException("Component class (" + getComponentClass() + ") does not match expected type");
@@ -481,7 +507,6 @@ public class PipelineItem {
 		final AnnotatedDocument document = getCopyOfSingleDependencyResult();
 		final CandidateGenerator candidateGenerator = (CandidateGenerator) getComponent();
 		final AnnotatedDocument docNewCandidates = candidateGenerator.generate(document);
-
 
 		// Updates candidates in "document" variable with the candidates from
 		// docNewCandidates

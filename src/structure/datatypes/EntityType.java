@@ -4,6 +4,9 @@ public class EntityType {
     private String uri;
     private String text;
 
+    public EntityType() {
+    }
+
     public EntityType(String uri, String text) {
         this.uri = uri;
         this.text = text;

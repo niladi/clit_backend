@@ -1,0 +1,35 @@
+{
+    "exampleId": "md_combined_cged",
+    "displayName": "MD + combined CG-ED",
+    "id": 1,
+    "pipelineConfigType": "complex",
+    "components": {
+        "md": [
+            {
+                "id": "MD1",
+                "value": "http://localhost:5001"
+            }
+        ],
+        "cg_ed": [],
+        "cg": [],
+        "ed": [],
+        "ner": [
+            {
+                "id": "NER1",
+                "value": "http://localhost:5007"
+            }
+        ]
+    },
+    "connections": [
+        {
+            "source": "MD1",
+            "target": "NER1"
+        }
+    ],
+    "startComponents": [
+        "MD1"
+    ],
+    "endComponents": [
+        "NER1"
+    ]
+}

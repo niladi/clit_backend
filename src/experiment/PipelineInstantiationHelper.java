@@ -20,6 +20,7 @@ import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.FullAnnotator;
 import structure.interfaces.pipeline.MentionDetector;
 import structure.interfaces.pipeline.PipelineComponent;
+import structure.interfaces.pipeline.Typing;
 import structure.utils.Loggable;
 
 public class PipelineInstantiationHelper implements Loggable {
@@ -118,73 +119,95 @@ public class PipelineInstantiationHelper implements Loggable {
 		getLogger().info("Linking component type: " + linkingComponentType);
 		try {
 			switch (linkingComponentType) {
-			case MD:
-				final MentionDetector mentionDetector;
-				System.out.println("isValidIP: " + isValidIP);
-				System.out.println("useAPI: " + useAPICommunicator);
+				case MD:
+					final MentionDetector mentionDetector;
+					System.out.println("isValidIP: " + isValidIP);
+					System.out.println("useAPI: " + useAPICommunicator);
 
-				if (isValidIP && useAPICommunicator) {
-					// Use IP to communicate with a MD API
-					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, apiURLStr, jsonPipeline);
-					mentionDetector = (MentionDetector) apiCommunicator;
-				} else {
-					mentionDetector = (MentionDetector) clazz// Class.forName(className)
-							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
-				}
+					if (isValidIP && useAPICommunicator) {
+						// Use IP to communicate with a MD API
+						final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
+								componentId, apiURLStr, jsonPipeline);
+						mentionDetector = (MentionDetector) apiCommunicator;
+					} else {
+						mentionDetector = (MentionDetector) clazz// Class.forName(className)
+								.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+					}
 
-				pipeline.addMD(componentId, mentionDetector);
-				getLogger().info("Info: Added mention detector '" + componentValue + "' with ID '" + componentId + "'");
-				break;
-			case CG:
-				final CandidateGenerator candidateGenerator;
-				if (useAPICommunicator) {
-					// Use IP to communicate with a CG API
-					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, apiURLStr, jsonPipeline);
-					candidateGenerator = (CandidateGenerator) apiCommunicator;
+					pipeline.addMD(componentId, mentionDetector);
+					getLogger().info(
+							"Info: Added mention detector '" + componentValue + "' with ID '" + componentId + "'");
+					break;
+				case NER:
+					final Typing entityTyping;
+					System.out.println("isValidIP: " + isValidIP);
+					System.out.println("useAPI: " + useAPICommunicator);
 
-				} else {
-					candidateGenerator = (CandidateGenerator) clazz// Class.forName(className)
-							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
-				}
-				pipeline.addCG(componentId, candidateGenerator);
-				getLogger()
-						.info("Info: Added candidate generator '" + componentValue + "' with ID '" + componentId + "'");
-				break;
-			case ED:
-				final Disambiguator disambiguator;
-				if (useAPICommunicator) {
-					// Use IP to communicate with a CG API
-					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, apiURLStr, jsonPipeline);
-					disambiguator = (Disambiguator) apiCommunicator;
-				} else {
-					disambiguator = (Disambiguator) clazz// Class.forName(className)
-							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
-				}
-				pipeline.addED(componentId, disambiguator);
-				getLogger().info(
-						"Info: Added entity disambiguator '" + componentValue + "' with ID '" + componentId + "'");
-				break;
-			case CG_ED:
-				final CandidateGeneratorDisambiguator candidateGeneratorDisambiguator;
-				if (useAPICommunicator) {
-					// Use IP to communicate with a CG API
-					final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
-							componentId, componentValue, jsonPipeline);
-					candidateGeneratorDisambiguator = (CandidateGeneratorDisambiguator) apiCommunicator;
-				} else {
-					candidateGeneratorDisambiguator = (CandidateGeneratorDisambiguator) clazz// Class.forName(className)
-							.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
-				}
-				pipeline.addCG_ED(componentId, candidateGeneratorDisambiguator);
-				getLogger().info("Info: Added candidate generator disambiguator '" + componentValue + "' with ID '"
-						+ componentId + "'");
-				break;
-			default:
-				throw new PipelineException(componentId + ": Linking component type '"
-						+ linkingComponentType.displayName + "' is not implemented", componentId);
+					if (isValidIP && useAPICommunicator) {
+						// Use IP to communicate with a MD API
+						final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
+								componentId, apiURLStr, jsonPipeline);
+						entityTyping = (Typing) apiCommunicator;
+					} else {
+						entityTyping = (Typing) clazz// Class.forName(className)
+								.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+					}
+
+					pipeline.addNER(componentId, entityTyping);
+					getLogger().info(
+							"Info: Added mention detector '" + componentValue + "' with ID '" + componentId + "'");
+					break;
+
+				case CG:
+					final CandidateGenerator candidateGenerator;
+					if (useAPICommunicator) {
+						// Use IP to communicate with a CG API
+						final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
+								componentId, apiURLStr, jsonPipeline);
+						candidateGenerator = (CandidateGenerator) apiCommunicator;
+
+					} else {
+						candidateGenerator = (CandidateGenerator) clazz// Class.forName(className)
+								.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+					}
+					pipeline.addCG(componentId, candidateGenerator);
+					getLogger()
+							.info("Info: Added candidate generator '" + componentValue + "' with ID '" + componentId
+									+ "'");
+					break;
+				case ED:
+					final Disambiguator disambiguator;
+					if (useAPICommunicator) {
+						// Use IP to communicate with a CG API
+						final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
+								componentId, apiURLStr, jsonPipeline);
+						disambiguator = (Disambiguator) apiCommunicator;
+					} else {
+						disambiguator = (Disambiguator) clazz// Class.forName(className)
+								.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+					}
+					pipeline.addED(componentId, disambiguator);
+					getLogger().info(
+							"Info: Added entity disambiguator '" + componentValue + "' with ID '" + componentId + "'");
+					break;
+				case CG_ED:
+					final CandidateGeneratorDisambiguator candidateGeneratorDisambiguator;
+					if (useAPICommunicator) {
+						// Use IP to communicate with a CG API
+						final APIComponentCommunicator apiCommunicator = new APIComponentCommunicator(knowledgeBase,
+								componentId, componentValue, jsonPipeline);
+						candidateGeneratorDisambiguator = (CandidateGeneratorDisambiguator) apiCommunicator;
+					} else {
+						candidateGeneratorDisambiguator = (CandidateGeneratorDisambiguator) clazz// Class.forName(className)
+								.getDeclaredConstructor(EnumModelType.class).newInstance(knowledgeBase);
+					}
+					pipeline.addCG_ED(componentId, candidateGeneratorDisambiguator);
+					getLogger().info("Info: Added candidate generator disambiguator '" + componentValue + "' with ID '"
+							+ componentId + "'");
+					break;
+				default:
+					throw new PipelineException(componentId + ": Linking component type '"
+							+ linkingComponentType.displayName + "' is not implemented", componentId);
 			}
 		} catch (ClassCastException e) {
 			throw new PipelineException(
@@ -216,54 +239,54 @@ public class PipelineInstantiationHelper implements Loggable {
 			final Class<? extends PipelineComponent> className;
 
 			switch (interComponentProcessorType) {
-			case COMBINER:
-				className = ExperimentSettings.getCombinerClassesCaseInsensitive().get(valueStr);
-				// Instantiates combiner correctly (web API or predefined, etc)
-				final Combiner combiner = instantiateCombiner(className, keyStr, valueStr, jsonPipeline);
+				case COMBINER:
+					className = ExperimentSettings.getCombinerClassesCaseInsensitive().get(valueStr);
+					// Instantiates combiner correctly (web API or predefined, etc)
+					final Combiner combiner = instantiateCombiner(className, keyStr, valueStr, jsonPipeline);
 
-				if (combiner != null) {
-					// Adds combiner
-					pipeline.addCombiner(keyStr, combiner);
-					getLogger().info("Info: Added combiner '" + valueStr + "' with ID '" + keyStr + "'");
-				}
+					if (combiner != null) {
+						// Adds combiner
+						pipeline.addCombiner(keyStr, combiner);
+						getLogger().info("Info: Added combiner '" + valueStr + "' with ID '" + keyStr + "'");
+					}
 
-				break;
-			case SPLITTER:
-				className = ExperimentSettings.getSplitterClassesCaseInsensitive().get(valueStr);
-				// Instantiates splitter correctly (web API or predefined, etc)
-				final Splitter splitter = instantiateSplitter(className, keyStr, valueStr, jsonPipeline);
+					break;
+				case SPLITTER:
+					className = ExperimentSettings.getSplitterClassesCaseInsensitive().get(valueStr);
+					// Instantiates splitter correctly (web API or predefined, etc)
+					final Splitter splitter = instantiateSplitter(className, keyStr, valueStr, jsonPipeline);
 
-				if (splitter != null) {
-					// Adds splitter
-					pipeline.addSplitter(keyStr, splitter);
-					getLogger().info("Info: Added splitter '" + valueStr + "' with ID '" + keyStr + "'");
-				}
-				break;
-			case TRANSLATOR:
-				className = ExperimentSettings.getTranslatorClassesCaseInsensitive().get(valueStr);
-				// Instantiates translator correctly (web API or predefined, etc)
-				final Translator translator = instantiateTranslator(className, keyStr, valueStr, jsonPipeline);
+					if (splitter != null) {
+						// Adds splitter
+						pipeline.addSplitter(keyStr, splitter);
+						getLogger().info("Info: Added splitter '" + valueStr + "' with ID '" + keyStr + "'");
+					}
+					break;
+				case TRANSLATOR:
+					className = ExperimentSettings.getTranslatorClassesCaseInsensitive().get(valueStr);
+					// Instantiates translator correctly (web API or predefined, etc)
+					final Translator translator = instantiateTranslator(className, keyStr, valueStr, jsonPipeline);
 
-				if (translator != null) {
-					// Adds translator
-					pipeline.addTranslator(keyStr, translator);
-					getLogger().info("Info: Added translator '" + valueStr + "' with ID '" + keyStr + "'");
-				}
-				break;
-			case FILTER:
-				className = ExperimentSettings.getFilterClassesCaseInsensitive().get(valueStr);
-				// Instantiates filter correctly (web API or predefined, etc)
-				final Filter filter = instantiateFilter(className, keyStr, valueStr, jsonPipeline);
+					if (translator != null) {
+						// Adds translator
+						pipeline.addTranslator(keyStr, translator);
+						getLogger().info("Info: Added translator '" + valueStr + "' with ID '" + keyStr + "'");
+					}
+					break;
+				case FILTER:
+					className = ExperimentSettings.getFilterClassesCaseInsensitive().get(valueStr);
+					// Instantiates filter correctly (web API or predefined, etc)
+					final Filter filter = instantiateFilter(className, keyStr, valueStr, jsonPipeline);
 
-				if (filter != null) {
-					// Adds filter
-					pipeline.addFilter(keyStr, filter);
-					getLogger().info("Info: Added filter '" + valueStr + "' with ID '" + keyStr + "'");
-				}
-				break;
-			default:
-				throw new PipelineException(keyStr + ": Inter component processor type '"
-						+ interComponentProcessorType.displayName + "' is not implemented", keyStr);
+					if (filter != null) {
+						// Adds filter
+						pipeline.addFilter(keyStr, filter);
+						getLogger().info("Info: Added filter '" + valueStr + "' with ID '" + keyStr + "'");
+					}
+					break;
+				default:
+					throw new PipelineException(keyStr + ": Inter component processor type '"
+							+ interComponentProcessorType.displayName + "' is not implemented", keyStr);
 			}
 		} catch (ClassNotFoundException | ClassCastException cnfe) {
 

@@ -12,8 +12,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -28,8 +33,26 @@ import structure.datatypes.PossibleAssignment;
 
 public class MentionUtils {
 
+	public static Collection<Mention> mergeEntityTypes(final Collection<Mention>... mentions) {
+
+		if (mentions.length <= 1)
+			throw new IllegalArgumentException("There should be multiple entity types");
+
+		return Stream.of(mentions).filter(Objects::nonNull).flatMap(Collection::stream).collect(
+				Collectors.toMap(MentionUtils::mentionToUniqueStr, m -> m, (m1, m2) -> {
+					final Mention m = new Mention(m1);
+					m.setEntityTypes(
+							Stream.of(m1, m2).filter(Objects::nonNull)
+									.map(Mention::getEntityTypes).filter(Objects::nonNull)
+									.flatMap(Collection::stream)
+									.collect(Collectors.toSet()));
+					return m;
+				})).values();
+	}
+
 	/**
-	 * Does a deep copy of collections of mentions
+	 * 
+	 * 
 	 * 
 	 * @param multiMentions which to copy
 	 * @return deep copy of these collections of mentions
@@ -129,20 +152,21 @@ public class MentionUtils {
 			throw new NullPointerException("Invalid key(null) for removal...");
 		}
 		Iterator<Mention> it = mentions.iterator();
-//		final int initSize = mentions.size();
+		// final int initSize = mentions.size();
 		while (it.hasNext()) {
 			// Logic works for multiple
 			if (it.next().getMention().equals(key)) {
 				it.remove();
 			}
 		}
-//		if (initSize == mentions.size()) {
-//			System.out.println("COULD NOT FIND ELEMENT: " + key);
-//		} else {
-//			System.out.println("FOUND ELEMENT: [" + (initSize - mentions.size()) + "] x " + key);
-//		}
-//		System.out.println("Mentions: " + mentions.toString());
-//		System.out.println("-------------------------------");
+		// if (initSize == mentions.size()) {
+		// System.out.println("COULD NOT FIND ELEMENT: " + key);
+		// } else {
+		// System.out.println("FOUND ELEMENT: [" + (initSize - mentions.size()) + "] x "
+		// + key);
+		// }
+		// System.out.println("Mentions: " + mentions.toString());
+		// System.out.println("-------------------------------");
 	}
 
 	/**
@@ -374,12 +398,12 @@ public class MentionUtils {
 
 		// Use set logic on text properties whether it's a new one or it exists
 		final Set<String> mentionStrings = new HashSet<>();
-		if(oldMentions != null) 
-          for (final Mention mention : oldMentions) {
-            final String mentionStr = mentionToUniqueStr(mention);
-            retMentions.add(mention);
-            mentionStrings.add(mentionStr);
-          }
+		if (oldMentions != null)
+			for (final Mention mention : oldMentions) {
+				final String mentionStr = mentionToUniqueStr(mention);
+				retMentions.add(mention);
+				mentionStrings.add(mentionStr);
+			}
 
 		for (final Mention mention : newMentions) {
 			final String mentionStr = mentionToUniqueStr(mention);

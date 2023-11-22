@@ -20,7 +20,8 @@ import structure.interfaces.pipeline.PipelineComponent;
 public class PipelineBuilder extends PipelineInstantiationHelper {
 
 	private static final List<EnumComponentType> LINKING_COMPONENT_TYPES = Arrays.asList(EnumComponentType.MD,
-			EnumComponentType.CG, EnumComponentType.ED, EnumComponentType.CG_ED, EnumComponentType.MD_CG_ED);
+			EnumComponentType.CG, EnumComponentType.ED, EnumComponentType.CG_ED, EnumComponentType.MD_CG_ED,
+			EnumComponentType.NER);
 	private static final List<EnumComponentType> INTER_COMPONENT_PROCESSOR_TYPES = Arrays.asList(
 			EnumComponentType.COMBINER, EnumComponentType.SPLITTER, EnumComponentType.TRANSFORMER,
 			EnumComponentType.TRANSLATOR, EnumComponentType.FILTER);
@@ -292,8 +293,7 @@ public class PipelineBuilder extends PipelineInstantiationHelper {
 
 		JSONArray connectionsArray = (JSONArray) connectionsObject;
 
-		if (connectionsArray.size() == 0)
-			System.out.println("Info: No connections specified");
+		System.out.println("Info: No connections specified");
 
 		for (Object connectionObject : connectionsArray) {
 			if (!(connectionObject instanceof JSONObject))
