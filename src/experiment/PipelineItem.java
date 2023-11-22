@@ -451,7 +451,7 @@ public class PipelineItem {
 		final Typing typer = (Typing) getComponent();
 		final AnnotatedDocument documentNer = typer.ner(document);
 
-		document.setMentions(MentionUtils.mergeEntityTypes(document.getMentions(), documentNer.getMentions()));
+		documentNer.setMentions(MentionUtils.mergeEntityTypes(document.getMentions(), documentNer.getMentions()));
 		return documentNer.makeMultiDocuments();
 	}
 
