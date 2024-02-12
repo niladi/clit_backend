@@ -32,6 +32,7 @@ public class CopySplitter extends AbstractSplitter {
 		} else if (copies > 0) {
 			for (int i = 0; i < copies; ++i) {
 				// Copy the input and add to output
+				System.out.println("CLONING IT...");
 				final AnnotatedDocument copy = (AnnotatedDocument) input.clone();
 				result.add(copy);
 			}

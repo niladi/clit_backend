@@ -25,16 +25,35 @@ public class DBpediaLookupCandidateGenerator extends AbstractCandidateGenerator 
 	private final String searchURL = "https://lookup.dbpedia.org/api/search?format=JSON&query=";
 	private final EnumModelType KG;
 
+	private String getScheme() {
+		return "https";
+	}
+
+	private String getUrl() {
+		return "lookup.dbpedia.org";
+	}
+
+	private String getSuffix() {
+		return "/api/search";
+	}
+
+	private int getPort() {
+		return -1;
+	}
+
 	public DBpediaLookupCandidateGenerator(final EnumModelType KG) {
 		this.KG = KG;
 	}
 
 	public List<PossibleAssignment> generate(Mention mention) throws IOException {
 		final List<PossibleAssignment> candidates;
-		final String urlGET = searchURL + mention.getOriginalMention();
+		final String query = "format=JSON&query=" + mention.getOriginalMention();
+
+		// final String urlGET = searchURL + mention.getOriginalMention();
 		URL url;
 		try {
-			url = new URI(urlGET).toURL();
+			url = new URI(getScheme(), null, getUrl(), getPort(), getSuffix(), query, null).toURL();
+			// url = new URI(urlGET).toURL();
 			final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setDoOutput(true);
 			conn.setRequestMethod("GET");

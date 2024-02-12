@@ -38,8 +38,7 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	public Mention(final String word, final PossibleAssignment assignment, final int offset,
 			final double detectionConfidence, final String originalMention, final String originalWithoutStopwords) {
 		this(word, Optional.ofNullable(assignment).map(e -> Arrays.asList(e)).orElse(new ArrayList<>()), offset,
-				detectionConfidence,
-				originalMention, originalWithoutStopwords);
+				detectionConfidence, originalMention, originalWithoutStopwords);
 	}
 
 	public Mention(final String word, final Collection<PossibleAssignment> possibleAssignments, final int offset,
@@ -355,13 +354,9 @@ public class Mention implements Cloneable, Loggable, Serializable {
 	/**
 	 * Make a deep copy of a mention.
 	 */
-	public Object clone() {
+	public Mention clone() {
 		Mention mention = null;
-		try {
-			mention = (Mention) super.clone();
-		} catch (CloneNotSupportedException e) {
-			mention = new Mention(this); // use copy constructor above
-		}
+		mention = new Mention(this); // use copy constructor above
 		return mention;
 	}
 
