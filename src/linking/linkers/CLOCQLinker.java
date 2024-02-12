@@ -5,6 +5,8 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import structure.abstractlinker.AbstractLinkerURL;
@@ -12,10 +14,12 @@ import structure.abstractlinker.AbstractLinkerURLGET;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
+import structure.datatypes.PossibleAssignment;
+import structure.interfaces.pipeline.CandidateGenerator;
 import structure.utils.FunctionUtils;
 import structure.utils.LinkerUtils;
 
-public class CLOCQLinker extends AbstractLinkerURLGET {
+public class CLOCQLinker extends AbstractLinkerURLGET implements CandidateGenerator {
 
 	private String textKeyword = "question";
 	private Float confidence = 1.0f;
@@ -122,6 +126,33 @@ public class CLOCQLinker extends AbstractLinkerURLGET {
 	@Override
 	public Collection<Mention> dataToMentions(final Object annotatedText) {
 		return LinkerUtils.clocqJSONtoMentions(getText(), annotatedText.toString(), this.confidence);
+	}
+
+	@Override
+	public AnnotatedDocument generate(AnnotatedDocument document) throws IOException {
+		// Step 0: Make a new annotated document with just the text
+		final AnnotatedDocument docToGenerate = new AnnotatedDocument(document.getText());
+		// Step 1: Annotate it "normally"
+		final AnnotatedDocument generatedCandidates = annotate(docToGenerate);
+
+		final Map<Integer, Mention> mapOffsetMentions = new HashMap<>();
+		for (Mention m : generatedCandidates.getMentions()) {
+			mapOffsetMentions.put(m.getOffset(), m);
+		}
+
+		final Collection<Mention> mentions = document.getMentions();
+
+		// Step 2: If there is a mention that matches (based on offset), add the found
+		// candidates!
+		for (Mention m : mentions) {
+			final Mention mentionWithCandidates = mapOffsetMentions.get(m.getOffset());
+			mentionWithCandidates.getPossibleAssignments();
+			// Add each found candidate to the return document
+			for (PossibleAssignment ass : mentionWithCandidates.getPossibleAssignments()) {
+				m.addPossibleAssignment(ass);
+			}
+		}
+		return document;
 	}
 
 }
