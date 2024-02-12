@@ -3,7 +3,9 @@ package structure.utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.aksw.gerbil.transfer.nif.Document;
@@ -35,6 +37,36 @@ import structure.datatypes.PossibleAssignment;
 import structure.interfaces.FeatureStringable;
 
 public class LinkerUtils {
+
+	public static List<Integer> getIndices(final String text, final String guess) {
+		return getIndices(text, guess, false);
+	}
+
+	public static List<Integer> getIndices(final String origText, final String origGuess,
+			final boolean caseInsensitive) {
+		final String text, guess;
+		if (caseInsensitive) {
+			text = origText.toLowerCase();
+			guess = origGuess.toLowerCase();
+		} else {
+			text = origText;
+			guess = origGuess;
+		}
+
+		final List<Integer> indices = Lists.newArrayList();
+		int index = text.indexOf(guess);
+		if (index >= 0) {
+			indices.add(index);
+		}
+
+		while (index >= 0) {
+			index = text.indexOf(guess, index + 1);
+			if (index >= 0) {
+				indices.add(index);
+			}
+		}
+		return indices;
+	}
 
 	/**
 	 * Babelfy JSON to mentions
@@ -182,6 +214,140 @@ public class LinkerUtils {
 //		System.out.println(getClass().getName());
 //		System.out.println(jsonSB);
 //		return new ArrayList<>();
+	}
+
+	public static Collection<Mention> clocqJSONtoMentions(final String inputText, final String annotatedText,
+			final double defaultConfidence) {
+		/**
+		 * {"@text":"Steve Jobs and Joan Baez are famous people", "@confidence":"0.0",
+		 * "@support":"0", "@types":"", "@sparql":"", "@policy":"whitelist",
+		 * "Resources":[ {"@URI":"http://dbpedia.org/resource/Steve_Jobs",
+		 * "@support":"1944", "@types":"Http://xmlns.com/foaf/0.1/Person, Wikidata:Q5,
+		 * Wikidata:Q24229398, Wikidata:Q215627, DUL:NaturalPerson, DUL:Agent,
+		 * Schema:Person, DBpedia:Person, DBpedia:Agent", "@surfaceForm":"Steve Jobs",
+		 * "@offset":"0", "@similarityScore":"0.999999852693872",
+		 * "@percentageOfSecondRank":"1.4072962162329612E-7"},
+		 * 
+		 * {"@URI":"http://dbpedia.org/resource/Joan_Baez", "@support":"1702",
+		 * "@types":"...", "@surfaceForm":"Joan Baez", "@offset":"15",
+		 * "@similarityScore":"0.999999999499579",
+		 * "@percentageOfSecondRank":"5.004174668419259E-10"} ] }
+		 * 
+		 */
+		final Collection<Mention> ret = new ArrayList<>();
+		try {
+			final JSONObject json = new JSONObject(annotatedText);
+			// Different resources
+			final String keyMentions = "mentions";
+			final String keyLinkings = "linkings";
+			// Specific resource-specific data
+			final String subKeyItem = "item";
+			final String subItemSubKeyID = "id";
+			final String subItemSubKeyLabel = "label";
+
+			final String subKeyMention = "mention";
+
+			final JSONArray linkings = json.optJSONArray(keyLinkings);
+			if (linkings == null || linkings.length() == 0) {
+				System.err.println("No results found.");
+				return ret;
+			}
+
+			// First group all entities to mentions
+			final Map<String, List<String>> mapLinkMention = new HashMap<>();
+			for (int i = 0; i < linkings.length(); ++i) {
+				try {
+					// get each json object
+					final JSONObject obj = linkings.getJSONObject(i);
+					final JSONObject item = obj.getJSONObject(subKeyItem);
+					final String idEntity = item.getString(subItemSubKeyID);
+					final String label = item.getString(subItemSubKeyLabel);
+					final String mention = obj.getString(subKeyMention).toLowerCase();
+
+					List<String> ids = null;
+					if ((ids = mapLinkMention.get(mention)) == null) {
+						ids = Lists.newArrayList();
+						mapLinkMention.put(mention, ids);
+					}
+
+					// Mimic a "set" but with insertion order mattering
+					// Reasoning: The first one CLOCQ outputs is the most important one (confident)
+					if (!ids.contains(idEntity)) {
+						// add entity to set of entities for this mention
+						ids.add(idEntity);
+					}
+				} catch (JSONException exc) {
+					exc.printStackTrace();
+				}
+			}
+
+			// After grouping, find the offsets and create the appropriate mentions
+			final String lowerInputText = inputText.toLowerCase();
+			for (Map.Entry<String, List<String>> e : mapLinkMention.entrySet()) {
+				final String uncasedMention = e.getKey();
+				final List<Integer> indices = getIndices(lowerInputText, uncasedMention);
+				for (int offset : indices) {
+					final String casedMention = inputText.substring(offset, offset + uncasedMention.length());
+					// Required: offset, mention, URIs (possible assignments)
+					// for each offset aka. occurrence of the mention, create a new mention
+
+					// Generate possible assignments from Wikidata Q-identifiers
+					final List<PossibleAssignment> possibleAssignments = Lists.newArrayList();
+					for (String qid : e.getValue()) {
+						possibleAssignments.add(new PossibleAssignment(qid, defaultConfidence));
+					}
+					final PossibleAssignment topAssignment = new PossibleAssignment(e.getValue().get(0));
+					final Mention m = new Mention(casedMention, possibleAssignments, offset, defaultConfidence,
+							casedMention, casedMention);
+					m.setAssignment(topAssignment);
+					// Adding it to the return list
+					ret.add(m);
+				}
+			}
+
+			final JSONArray textMentions = json.optJSONArray(keyMentions);
+			for (int i = 0; i < textMentions.length(); ++i) {
+				final String mention = textMentions.getString(i);
+				final List<Integer> indices = getIndices(inputText, mention, true);
+				for (final Integer offset : indices) {
+					final String casedMention = inputText.substring(offset, offset + mention.length());
+					final Mention m = new Mention(casedMention, offset);
+					ret.add(m);
+				}
+			}
+
+//			for (int i = 0; i < textMentions.length(); ++i) {
+//				try {
+//					final JSONObject obj = textMentions.getJSONObject(i);
+//					obj.getJSONArray(keyMentions);
+//					final Integer offset = obj.getInt(keyOffset);
+//					final String surfaceForm = obj.getString(keySurfaceForm);
+//					final Double score = obj.getDouble(keySimilarityScore);
+//					final String uri = obj.getString(keyURI);
+//					final Double scoreSecond = obj.getDouble(keyPercSecondRank);
+//					final String types = obj.getString(keyTypes);
+//					final Integer support = obj.getInt(keySupport);
+//
+//					final PossibleAssignment possAss = new PossibleAssignment(uri, // surfaceForm,
+//							score);
+//					final Mention mention = new Mention(surfaceForm, possAss, offset, defaultConfidence, surfaceForm,
+//							surfaceForm);
+//					final Collection<PossibleAssignment> assignments = new ArrayList<>();
+//					assignments.add(possAss);
+//					mention.updatePossibleAssignments(assignments);
+//					mention.assignBest();
+//
+//					ret.add(mention);
+//				} catch (JSONException exc) {
+//					exc.printStackTrace();
+//				}
+//			}
+			return ret;
+		} catch (JSONException e) {
+			e.printStackTrace();
+			// System.out.println("DBpedia Text:" + annotatedText);
+		}
+		return null;
 	}
 
 	/**
