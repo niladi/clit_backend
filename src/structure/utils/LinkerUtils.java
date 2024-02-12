@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.aksw.gerbil.transfer.nif.Document;
@@ -305,6 +307,11 @@ public class LinkerUtils {
 				}
 			}
 
+			// Add simple mentions - check for duplicates...
+			final Set<String> duplicateCheck = new HashSet<>();
+			for (Mention m : ret) {
+				duplicateCheck.add(offsetMentionKey(m.getOffset(), m.getMention()));
+			}
 			final JSONArray textMentions = json.optJSONArray(keyMentions);
 			for (int i = 0; i < textMentions.length(); ++i) {
 				final String mention = textMentions.getString(i);
@@ -312,7 +319,11 @@ public class LinkerUtils {
 				for (final Integer offset : indices) {
 					final String casedMention = inputText.substring(offset, offset + mention.length());
 					final Mention m = new Mention(casedMention, offset);
-					ret.add(m);
+					// Only add it if there is no mention there yet, because this part ONLY creates
+					// a mention without any additional info
+					if (!duplicateCheck.contains(offsetMentionKey(m.getOffset(), m.getMention()))) {
+						ret.add(m);
+					}
 				}
 			}
 
@@ -348,6 +359,11 @@ public class LinkerUtils {
 			// System.out.println("DBpedia Text:" + annotatedText);
 		}
 		return null;
+	}
+
+	private static String offsetMentionKey(int offset, String mention) {
+		// TODO Auto-generated method stub
+		return offset + "__" + mention.length();
 	}
 
 	/**

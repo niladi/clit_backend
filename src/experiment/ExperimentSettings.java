@@ -160,7 +160,7 @@ public enum ExperimentSettings {
 		addComponent("Falcon TopK", Falcon2CandidateGenerator.class, EnumComponentType.CG);//
 
 		// CLOCQ - https://clocq.mpi-inf.mpg.de/
-		addComponent("CLOCQ", CLOCQLinker.class, EnumComponentType.MD_CG_ED, EnumComponentType.CG);
+		addComponent("CLOCQ", CLOCQLinker.class);
 		
 		// Translators
 		// DBpedia to Wikidata

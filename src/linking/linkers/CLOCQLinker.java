@@ -146,10 +146,11 @@ public class CLOCQLinker extends AbstractLinkerURLGET implements CandidateGenera
 		// candidates!
 		for (Mention m : mentions) {
 			final Mention mentionWithCandidates = mapOffsetMentions.get(m.getOffset());
-			mentionWithCandidates.getPossibleAssignments();
-			// Add each found candidate to the return document
-			for (PossibleAssignment ass : mentionWithCandidates.getPossibleAssignments()) {
-				m.addPossibleAssignment(ass);
+			if (mentionWithCandidates != null) {
+				// Add each found candidate to the return document
+				for (PossibleAssignment ass : mentionWithCandidates.getPossibleAssignments()) {
+					m.addPossibleAssignment(ass);
+				}
 			}
 		}
 		return document;
