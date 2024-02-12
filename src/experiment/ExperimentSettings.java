@@ -23,6 +23,7 @@ import linking.candidategeneration.Falcon2CandidateGenerator;
 import linking.candidategeneration.WikidataDictCandidateGenerator;
 import linking.linkers.AidaLinker;
 import linking.linkers.BabelfyLinker;
+import linking.linkers.CLOCQLinker;
 import linking.linkers.DBpediaSpotlightLinker;
 import linking.linkers.EntityClassifierEULinker;
 import linking.linkers.FOXLinker;
@@ -158,6 +159,9 @@ public enum ExperimentSettings {
 		// Falcon 2.0 "topK"
 		addComponent("Falcon TopK", Falcon2CandidateGenerator.class, EnumComponentType.CG);//
 
+		// CLOCQ - https://clocq.mpi-inf.mpg.de/
+		addComponent("CLOCQ", CLOCQLinker.class, EnumComponentType.MD_CG_ED, EnumComponentType.CG);
+		
 		// Translators
 		// DBpedia to Wikidata
 		addComponent("DBP2WD", TranslatorDBpediaToWikidata.class, EnumComponentType.TRANSLATOR);
