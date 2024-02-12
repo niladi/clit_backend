@@ -1,6 +1,5 @@
 package clit.eval;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -812,11 +811,12 @@ public class LauncherEvaluatorTesterMentions {
 
 	private static void outputEvaluationsToFile(final Map<String, Serializable> mapEvals,
 			final String pathOutputEvals) {
-		try (final BufferedWriter bwOut = new BufferedWriter(new FileOutputStream(new File(pathOutputEvals)))) {
-			for (Entry<String, Serializable> e : mapEvals.entrySet()) {
+		// try (final BufferedWriter bwOut = new BufferedWriter(new FileOutputStream(new
+		// File(pathOutputEvals)))) {
+		// for (Entry<String, Serializable> e : mapEvals.entrySet()) {
 
-			}
-		}
+		// }
+		// }
 	}
 
 	private static Map<String, List<AnnotationEvaluation>> deserializeMapAnnotationEvaluations(final String inPath) {
