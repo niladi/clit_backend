@@ -41,7 +41,7 @@ public class Experimenter {
 	 * respective method is called.
 	 * Returns a failed ExperimentTaskResult in case none or both of them are defined.
 	 */
-	public Experiment run() {
+	private Experiment runTemplate() {
 		// TODO Don't create new Experiment but update the Tasks of the old Experiment instead? Maybe giving them a
 		// state?
 		Experiment experimentResult = new Experiment(experiment.getExperimentId());
@@ -73,11 +73,27 @@ public class Experimenter {
 		}
 
 		// write result to JSON file
-		experimentStore.writeExperimentResultToJsonFile(experimentResult);
 
 		return experimentResult;
+  }
+	public Experiment run() {
+    Experiment results = this.runTemplate();
+	experimentStore.writeExperimentResultToJsonFile(results);
+	return results;
 	}
 
+  // Path is an array that consists of strings representing the recursive path to the file
+  // e.g ["Babelfy", "Falcon TopK", "ED1", ..., "hash_example"]
+	public Experiment runPath(String[] path) {
+    Experiment results = this.runTemplate();
+    boolean errors = false;
+    for(ExperimentTask et : results.getExperimentTasks()) {
+    	if (et.getErrorMessage() != null) errors = true;
+    };
+    if (!errors)
+		experimentStore.writeExperimentResultToJsonFile(results, path);
+	return results;
+	}
 	/**
 	 * Run the experiment task and return a list of documents, each one represented by another list with one document
 	 * for each intermediate result.

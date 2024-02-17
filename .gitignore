@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+~
 
 # Log file
 *.log
@@ -29,4 +30,5 @@ cb_linked_output.txt
 .settings/org.eclipse.wst.common.component
 .settings/org.eclipse.wst.common.project.facet.core.xml
 .settings/org.eclipse.wst.validation.prefs
+.settings/org.eclipse.jdt.core.prefs
 !/target/clit-0.0.1.jar

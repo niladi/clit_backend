@@ -21,24 +21,27 @@ public class ExperimentStore {
 	private EnumModelType KG;
 	private String path;
 
-//	private static final String KEY_EXPERIMENT_ID = "experimentId";
-//	private static final String KEY_TASK_ID = "taskId";
-//	private static final String KEY_PIPELINE_TYPE = "pipelineType";
-//	private static final String KEY_PIPELINE_CONFIG = "pipelineConfig";
-//	private static final String KEY_DATASET = "dataset";
-//	private static final String KEY_KNOWLEDGE_BASE = "knowledgeBase";
-//	private static final String KEY_DOCUMENT = "document";
-//	private static final String KEY_SUCCEEDED = "succeeded";
-//	private static final String KEY_ERROR_MESSAGE = "errorMessage";
-//	private static final String KEY_TEXT = "text";
-//	private static final String KEY_MENTIONS = "mentions";
-//	private static final String KEY_MENTION_TEXT = "mention";
-//	private static final String KEY_MENTION_ASSIGNMENT = "assignment";
-//	private static final String KEY_MENTION_OFFSET = "offset";
-//	private static final String KEY_MENTION_DETECTION_CONFIDENCE = "detectionConfidence";
-//	private static final String KEY_MENTION_POSSIBLE_ASSIGNMENTS = "possibleAssignments";
-//	private static final String KEY_MENTION_ORIGINAL_MENTION = "originalMention";
-//	private static final String KEY_MENTION_ORIGINAL_WITHOUT_STOPWORDS = "originalWithoutStopwords";
+	// private static final String KEY_EXPERIMENT_ID = "experimentId";
+	// private static final String KEY_TASK_ID = "taskId";
+	// private static final String KEY_PIPELINE_TYPE = "pipelineType";
+	// private static final String KEY_PIPELINE_CONFIG = "pipelineConfig";
+	// private static final String KEY_DATASET = "dataset";
+	// private static final String KEY_KNOWLEDGE_BASE = "knowledgeBase";
+	// private static final String KEY_DOCUMENT = "document";
+	// private static final String KEY_SUCCEEDED = "succeeded";
+	// private static final String KEY_ERROR_MESSAGE = "errorMessage";
+	// private static final String KEY_TEXT = "text";
+	// private static final String KEY_MENTIONS = "mentions";
+	// private static final String KEY_MENTION_TEXT = "mention";
+	// private static final String KEY_MENTION_ASSIGNMENT = "assignment";
+	// private static final String KEY_MENTION_OFFSET = "offset";
+	// private static final String KEY_MENTION_DETECTION_CONFIDENCE =
+	// "detectionConfidence";
+	// private static final String KEY_MENTION_POSSIBLE_ASSIGNMENTS =
+	// "possibleAssignments";
+	// private static final String KEY_MENTION_ORIGINAL_MENTION = "originalMention";
+	// private static final String KEY_MENTION_ORIGINAL_WITHOUT_STOPWORDS =
+	// "originalWithoutStopwords";
 
 	public ExperimentStore() {
 		KG = EnumModelType.DEFAULT;
@@ -51,12 +54,12 @@ public class ExperimentStore {
 	 * @param path
 	 * @param results
 	 */
-	public void writeExperimentResultToJsonFile(Experiment experimentResult) {
-		int experimentId = experimentResult.getExperimentId();
+	public void writeExperimentResultToJsonFile(Experiment experimentResult, String[] path) {
 		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 		try {
 			String json = ow.writeValueAsString(experimentResult);
-			FileWriter file = new FileWriter(getFile(experimentId));
+			FileWriter file = new FileWriter(getFile(path));
+			System.out.println(getFile(path).getAbsolutePath());
 			file.write(json.toString());
 			file.flush();
 			file.close();
@@ -66,12 +69,25 @@ public class ExperimentStore {
 	}
 
 	/**
+	 * Write the results of an experiments to a JSON file.
+	 * 
+	 * @param path
+	 * @param results
+	 */
+	public void writeExperimentResultToJsonFile(Experiment experimentResult) {
+		int experimentId = experimentResult.getExperimentId();
+		String[] path = { String.valueOf(experimentId) };
+		this.writeExperimentResultToJsonFile(experimentResult, path);
+	}
+
+	/**
 	 * Read experiment results from JSON file and return the JSON.
 	 * 
 	 * @param id ID of the experiment
 	 */
 	public JSONObject readExperimentResultAsJson(final int id) throws IOException, ParseException {
-		return readExperimentResultAsJson(getFile(id));
+		String[] path = { String.valueOf(id) };
+		return readExperimentResultAsJson(getFile(path));
 	}
 
 	/**
@@ -119,10 +135,19 @@ public class ExperimentStore {
 	/**
 	 * Return the path of the JSON file.
 	 * 
-	 * @param ID id of the experiment
+	 * @param path path of the results
 	 */
-	private File getFile(int id) {
-		return new File(path + String.valueOf(id) + ".json");
+	public File getFile(String[] outputPath) {
+		if (outputPath.length == 1)
+			return new File(path + outputPath[0] + ".json");
+		String dirs = "";
+		for (int i = 0; i < outputPath.length - 1; ++i) {
+			dirs += outputPath[i] + "/";
+		}
+		File directory = new File(path + dirs);
+		directory.mkdirs();
+		File file = new File(directory, outputPath[outputPath.length - 1] + ".json");
+		return file;
 	}
 
 	/**
