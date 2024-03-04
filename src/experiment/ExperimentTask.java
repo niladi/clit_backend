@@ -4,6 +4,9 @@ import java.util.Collection;
 
 import org.json.simple.JSONObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import structure.config.constants.EnumPipelineType;
 import structure.config.constants.EnumTaskState;
 import structure.datatypes.AnnotatedDocument;
@@ -15,16 +18,19 @@ import structure.datatypes.AnnotatedDocument;
  * 
  * @author Samuel Printz
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ExperimentTask {
 
 	/**
 	 * ID of the experiment.
 	 */
+	@JsonProperty("experimentId")
 	private int experimentId;
 
 	/**
 	 * ID of the experiment task.
 	 */
+	@JsonProperty("taskId")
 	private int taskId;
 
 	/**
@@ -35,12 +41,14 @@ public class ExperimentTask {
 	 * - First Collection: multiple documents, i.e. one for each document
 	 * - Second Collection: intermediate results, i.e. one for each component
 	 */
+	@JsonProperty("documents")
 	private Collection<Collection<AnnotatedDocument>> documents;
 
 	/**
 	 * Pipeline configuration in JSON format as configured by the user.
 	 * This contains only <i>one</i> pipeline.
 	 */
+	@JsonProperty("pipelineConfig")
 	private JSONObject pipelineConfig;
 
 	/**
@@ -48,24 +56,33 @@ public class ExperimentTask {
 	 * or disambiguated mentions (ED). For more types see {@link EnumPipelineType}.
 	 * TODO Remove? Doesn't seem to be used for anything.
 	 */
+	@JsonProperty("pipelineType")
 	private EnumPipelineType pipelineType;
 
 	/**
 	 * ID of the current component, i.e. the component that is executed next.
 	 */
+	@JsonProperty("currentComponent")
 	private String currentComponent;
 
 	/**
 	 * State of the task, see {@link EnumTaskState}.
 	 */
+	@JsonProperty("state")
 	private EnumTaskState state;
 
 	/**
 	 * Error message for failed tasks. Used in the front-end.
 	 */
+	@JsonProperty("errorMessage")
 	private String errorMessage;
 
-
+	
+	public ExperimentTask()
+	{
+		this(-1, -1, null, null, EnumTaskState.FAILED);
+	}
+	
 	/**
 	 * Default constructor an experiment task.
 	 */

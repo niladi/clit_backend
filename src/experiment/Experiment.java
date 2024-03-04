@@ -3,6 +3,8 @@ package experiment;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Experiment {
 
 	private List<ExperimentTask> experimentTasks;

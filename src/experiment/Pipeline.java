@@ -2,8 +2,10 @@ package experiment;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -397,10 +399,10 @@ public class Pipeline {
 	 * 
 	 * @return Collection of annotated documents
 	 */
-	public Collection<AnnotatedDocument> getResultDocuments() {
+	public ArrayList<AnnotatedDocument> getResultDocuments() {
 		// iterate all dependencies of the final component
 		final Collection<PipelineItem> dependencies = this.outputItem.getDependencies();
-		final Collection<AnnotatedDocument> results = Lists.newArrayList();
+		final ArrayList<AnnotatedDocument> results = Lists.newArrayList();
 		for (PipelineItem dependency : dependencies) {
 			// get the result of the dependency
 			final AnnotatedDocument document = dependency.getFirstResult();

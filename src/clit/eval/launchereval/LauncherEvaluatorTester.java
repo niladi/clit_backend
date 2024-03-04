@@ -1,4 +1,4 @@
-package clit.eval;
+package clit.eval.launchereval;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +25,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.opencsv.CSVWriter;
 
+import clit.eval.NIFBaseEvaluator;
 import clit.eval.datatypes.EvalConstants;
 import clit.eval.datatypes.evaluation.BaseMetricContainer;
 import clit.eval.explainer.PrecisionRecallF1Explainer;

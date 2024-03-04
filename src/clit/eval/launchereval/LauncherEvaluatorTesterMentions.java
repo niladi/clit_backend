@@ -1,4 +1,4 @@
-package clit.eval;
+package clit.eval.launchereval;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.opencsv.CSVWriter;
 
 import clit.combiner.UnionCombiner;
+import clit.eval.NIFBaseEvaluator;
 import clit.eval.datatypes.EvalConstants;
 import clit.eval.datatypes.evaluation.BaseMetricContainer;
 import clit.eval.datatypes.evaluation.MentionEvaluation;
@@ -460,7 +461,7 @@ public class LauncherEvaluatorTesterMentions {
 	 * @param combiner
 	 * @return
 	 */
-	private Map<String, List<AnnotationEvaluation>> combineSystemsPairwise(final String linkerStringDelim,
+	public static Map<String, List<AnnotationEvaluation>> combineSystemsPairwise(final String linkerStringDelim,
 			final List<Document> nifDocs, Map<String, List<AnnotatedDocument>> mapLinkerResults,
 			final Combiner combiner) {
 		final Map<String, List<AnnotationEvaluation>> mapEvaluations = new TreeMap<>();
@@ -519,7 +520,7 @@ public class LauncherEvaluatorTesterMentions {
 	 * @param combiner
 	 * @return
 	 */
-	private Map<String, List<AnnotationEvaluation>> combineSystemResultPermutationsRecursive(final int depthToDo,
+	public static Map<String, List<AnnotationEvaluation>> combineSystemResultPermutationsRecursive(final int depthToDo,
 			final List<String> keysToDo, final Map<String, List<AnnotationEvaluation>> mapEvaluations,
 			final String linkerStringDelim, final List<Document> nifDocs,
 			Map<String, List<AnnotatedDocument>> mapLinkerResults, final Combiner combiner) {
@@ -566,7 +567,7 @@ public class LauncherEvaluatorTesterMentions {
 		return mapEvaluations;
 	}
 
-	private List<AnnotationEvaluation> combineSystemsAll(final String linkerStringDelim, final List<Document> nifDocs,
+	public static List<AnnotationEvaluation> combineSystemsAll(final String linkerStringDelim, final List<Document> nifDocs,
 			Map<String, List<AnnotatedDocument>> mapLinkerResults, final Combiner combiner) {
 		List<List<AnnotatedDocument>> toCombineAllDocs = Lists.newArrayList();
 		List<AnnotatedDocument> annotatedDocs = Lists.newArrayList();
@@ -592,7 +593,7 @@ public class LauncherEvaluatorTesterMentions {
 
 	}
 
-	private List<Integer> computeMentionTP_FP_FN(List<AnnotationEvaluation> evaluations) {
+	public static List<Integer> computeMentionTP_FP_FN(List<AnnotationEvaluation> evaluations) {
 		int mentionTextTP = 0;
 		int mentionTextFP = 0;
 		int mentionTextFN = 0;
@@ -629,11 +630,11 @@ public class LauncherEvaluatorTesterMentions {
 		return ret;
 	}
 
-	private String linkerToKey(Linker linker) {
+	public static String linkerToKey(Linker linker) {
 		return linker.getClass().toString();
 	}
 
-	private List<AnnotatedDocument> executionAndSerializationHandling(final Linker linker, final List<Document> nifDocs,
+	public static List<AnnotatedDocument> executionAndSerializationHandling(final Linker linker, final List<Document> nifDocs,
 			HashMap<Linker, String> mapLinkerSerialization) throws Exception {
 		List<AnnotatedDocument> annotatedDocs = null;
 		final String annotatedDocsRawPath = mapLinkerSerialization.get(linker);
@@ -659,7 +660,7 @@ public class LauncherEvaluatorTesterMentions {
 		return annotatedDocs;
 	}
 
-	private BaseMetricContainer addMetricsToContainer(List<AnnotationEvaluation> evaluations) {
+	public static BaseMetricContainer addMetricsToContainer(List<AnnotationEvaluation> evaluations) {
 		final BaseMetricContainer linkerMetricContainer = new BaseMetricContainer();
 		for (AnnotationEvaluation eval : evaluations) {
 			if (eval.getCategory().toLowerCase().contains("document")) {
@@ -688,7 +689,7 @@ public class LauncherEvaluatorTesterMentions {
 	 * @return
 	 * @throws FileNotFoundException
 	 */
-	private List<Document> loadDocumentsAndTranslate(final File inFile, final Translator documentTranslator)
+	public static List<Document> loadDocumentsAndTranslate(final File inFile, final Translator documentTranslator)
 			throws FileNotFoundException {
 		final List<Document> nifDocs = Lists.newArrayList();
 		for (Document document : NIFUtils.parseDocuments(inFile)) {
@@ -724,7 +725,7 @@ public class LauncherEvaluatorTesterMentions {
 	 * @param labels
 	 * @throws IOException
 	 */
-	private static void outputLabels(String outCSVPath, List<Document> nifDocs, List<List<String>> allPrecisions,
+	public static void outputLabels(String outCSVPath, List<Document> nifDocs, List<List<String>> allPrecisions,
 			HashBiMap<String, Integer> labelCluster) throws IOException {
 		final File fileCSV = new File(outCSVPath);
 		boolean addHeader = true;
@@ -799,7 +800,7 @@ public class LauncherEvaluatorTesterMentions {
 		return path;
 	}
 
-	private static void serialize(final String outPath, final Map<String, List<AnnotationEvaluation>> obj) {
+	public static void serialize(final String outPath, final Map<String, List<AnnotationEvaluation>> obj) {
 		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(outPath)))) {
 			System.out.println("Serializing annotation evaluations");
 			oos.writeObject(obj);
@@ -819,7 +820,7 @@ public class LauncherEvaluatorTesterMentions {
 		// }
 	}
 
-	private static Map<String, List<AnnotationEvaluation>> deserializeMapAnnotationEvaluations(final String inPath) {
+	public static Map<String, List<AnnotationEvaluation>> deserializeMapAnnotationEvaluations(final String inPath) {
 		try (final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(inPath)))) {
 			System.out.println("Deserialising annotation evaluations");
 			return (Map<String, List<AnnotationEvaluation>>) ois.readObject();
@@ -830,7 +831,7 @@ public class LauncherEvaluatorTesterMentions {
 		return new HashMap<String, List<AnnotationEvaluation>>();
 	}
 
-	private static void serialize(final String outPath, final List<AnnotatedDocument> annotatedDocs) {
+	public static void serialize(final String outPath, final List<AnnotatedDocument> annotatedDocs) {
 		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(outPath)))) {
 			oos.writeObject(annotatedDocs);
 		} catch (IOException e) {
@@ -839,7 +840,7 @@ public class LauncherEvaluatorTesterMentions {
 		}
 	}
 
-	private static List<AnnotatedDocument> deserializeDocuments(final String inPath) {
+	public static List<AnnotatedDocument> deserializeDocuments(final String inPath) {
 		try (final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(inPath)))) {
 			return (List<AnnotatedDocument>) ois.readObject();
 		} catch (IOException | ClassNotFoundException e) {
@@ -849,7 +850,7 @@ public class LauncherEvaluatorTesterMentions {
 		return Lists.newArrayList();
 	}
 
-	private static void printEvaluations(List<AnnotationEvaluation> evaluations) {
+	public static void printEvaluations(List<AnnotationEvaluation> evaluations) {
 		System.out.println("EVALUATIONS");
 		for (AnnotationEvaluation eval : evaluations) {
 			if (eval.getCategory().toLowerCase().contains("dataset")
@@ -872,7 +873,7 @@ public class LauncherEvaluatorTesterMentions {
 	 * @return list of annotated documents returned from linker
 	 * @throws Exception
 	 */
-	private static List<AnnotatedDocument> executeLinkerOnDocuments(Linker linker, List<Document> nifDocs)
+	public static List<AnnotatedDocument> executeLinkerOnDocuments(Linker linker, List<Document> nifDocs)
 			throws Exception {
 		final List<AnnotatedDocument> toEvaluate = Lists.newArrayList();
 		for (final Document nifDoc : nifDocs) {
@@ -897,7 +898,7 @@ public class LauncherEvaluatorTesterMentions {
 		return toEvaluate;
 	}
 
-	private static List<Integer> argmin(Collection<? extends Comparable> vals) {
+	public static List<Integer> argmin(Collection<? extends Comparable> vals) {
 		final List<Integer> indices = Lists.newArrayList();
 		final Comparable<Object> minVal = Collections.min(vals);
 		int i = 0;
@@ -910,7 +911,7 @@ public class LauncherEvaluatorTesterMentions {
 		return indices;
 	}
 
-	private static List<Integer> argmax(Collection<? extends Comparable> vals) {
+	public static List<Integer> argmax(Collection<? extends Comparable> vals) {
 		final List<Integer> indices = Lists.newArrayList();
 		final Comparable<Object> maxVal = Collections.max(vals);
 		int i = 0;

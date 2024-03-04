@@ -62,8 +62,8 @@ public class DatasetStore {
 		return documents;
 	}
 
-	public List<AnnotatedDocument> readDatasetAsAnnotatedDocument(String datasetName) throws PipelineException {
-		List<AnnotatedDocument> results = new ArrayList<>();
+	public ArrayList<AnnotatedDocument> readDatasetAsAnnotatedDocument(String datasetName) throws PipelineException {
+		ArrayList<AnnotatedDocument> results = new ArrayList<>();
 		List<Document> documents = readDataset(datasetName);
 		for (Document document : documents) {
 			AnnotatedDocument result = makeAnnotatedDocument(document);

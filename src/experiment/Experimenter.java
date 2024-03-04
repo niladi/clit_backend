@@ -1,10 +1,12 @@
 package experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
-
-import com.google.common.collect.Lists;
+import java.util.List;
 
 import org.json.simple.JSONObject;
+
+import com.google.common.collect.Lists;
 
 import structure.config.constants.EnumPipelineType;
 import structure.config.constants.EnumTaskState;
@@ -107,7 +109,7 @@ public class Experimenter {
 			final AnnotatedDocument document = documentCollection.iterator().next();
 			pipeline.reset();
 			pipeline.execute(document);
-			final Collection<AnnotatedDocument> annotatedDocuments = pipeline.getResultDocuments();
+			final ArrayList<AnnotatedDocument> annotatedDocuments = pipeline.getResultDocuments();
 			annotatedDocumentCollection.add(annotatedDocuments);
 		}
 		return annotatedDocumentCollection;
