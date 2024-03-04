@@ -9,13 +9,14 @@ import java.util.concurrent.TimeUnit;
 public class ThreadPoolBenchmarkRunner {
   public static void main(String[] args) {
     String home = System.getProperty("user.home");
-    Map<String, String> paths = Map.of(
-        "AIDA-YAGO2-dataset.tsv_nif",
-        home + "/Desktop/dataset/datasets/conll_aida-yago2-dataset/AIDA-YAGO2-dataset.tsv_nif",
-        "KORE_50_DBpedia.ttl", home + "/Desktop/dataset/datasets/KORE50/KORE_50_DBpedia.ttl",
-        "News-100.ttl", home + "/Desktop/dataset/datasets/News-100.ttl",
-        "RSS-500.ttl", home + "/Desktop/dataset/datasets/RSS-500.ttl",
-        "Reuters-128.ttl", home + "/Desktop/dataset/datasets/Reuters-128.ttl");
+//    Map<String, String> paths = Map.of(
+//        "AIDA-YAGO2-dataset.tsv_nif",
+//        home + "/Desktop/dataset/datasets/conll_aida-yago2-dataset/AIDA-YAGO2-dataset.tsv_nif",
+//        "KORE_50_DBpedia.ttl", home + "/Desktop/dataset/datasets/KORE50/KORE_50_DBpedia.ttl",
+//        "News-100.ttl", home + "/Desktop/dataset/datasets/News-100.ttl",
+//        "RSS-500.ttl", home + "/Desktop/dataset/datasets/RSS-500.ttl",
+//        "Reuters-128.ttl", home + "/Desktop/dataset/datasets/Reuters-128.ttl");
+    Map<String, String> paths = new HashMap<>();
     Map<String, Boolean> linkers = new HashMap<>();
     linkers.put("AIDA", false); // Error: MD1: https://gate.d5.mpi-inf.mpg.de/aida/service/disambiguate
     linkers.put("Babelfy", true);

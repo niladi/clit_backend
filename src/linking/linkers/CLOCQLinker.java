@@ -24,8 +24,6 @@ public class CLOCQLinker extends AbstractLinkerURLGET implements CandidateGenera
 	private String textKeyword = "question";
 	private Float confidence = 1.0f;
 	private String kKeyword = "k";
-	private final int originalK = 20;
-	private int k = originalK;
 
 	public CLOCQLinker(EnumModelType KG) {
 		super(KG);
@@ -44,33 +42,13 @@ public class CLOCQLinker extends AbstractLinkerURLGET implements CandidateGenera
 	}
 
 	@Override
-	public AnnotatedDocument annotate(AnnotatedDocument document) throws IOException {
-		int tryCounter = 0;
-		final int maxTries = 2;
-		return annotate(document, maxTries, tryCounter);
-	}
-
-	private AnnotatedDocument annotate(final AnnotatedDocument document, final int maxTries, final int tryCounter)
-			throws IOException {
+	public AnnotatedDocument annotate(final AnnotatedDocument document) throws IOException {
 		try {
 			AnnotatedDocument doc = super.annotate(document);
 			return doc;
 		} catch (IOException ioe) {
-			if (ioe.getMessage().contains("500")) {
-				System.out.println("Retrying with lowered K parameter: k=" + this.params.get(kKeyword));
-				// Reduce by 2 each try...
-				k -= 2;
-				this.params.put(kKeyword, "" + k);
-				if (tryCounter > maxTries || k <= 0) {
-					System.out.println("Setting to 'AUTO'");
-					setParam(kKeyword, "AUTO");
-				}
-				return annotate(document, maxTries, tryCounter + 1);
-			} else {
-				// It's not an internal server error, so... it just doesn't work
-				System.err.println(ioe.getMessage());
-				return document;
-			}
+			ioe.printStackTrace();
+			return null;
 		}
 	}
 
@@ -83,7 +61,7 @@ public class CLOCQLinker extends AbstractLinkerURLGET implements CandidateGenera
 		url("clocq.mpi-inf.mpg.de");
 		// sets the suffix
 		suffix("/linking_api/entity_linking");
-		setParam(kKeyword, "" + k);
+		setParam(kKeyword, "AUTO");
 
 		return true;
 	}
