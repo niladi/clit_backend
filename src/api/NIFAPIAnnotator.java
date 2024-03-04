@@ -1,9 +1,7 @@
 package api;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,9 +23,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.beust.jcommander.internal.Lists;
 
-import linking.candidategeneration.CandidateGeneratorMap;
-import linking.disambiguation.DisambiguatorAgnos;
-import linking.mentiondetection.InputProcessor;
+import experiment.PipelineItem;
+import linking.candidategeneration.DBpediaLookupCandidateGenerator;
+import linking.linkers.BabelfyLinker;
 import linking.mentiondetection.StopwordsLoader;
 import linking.pruning.MentionPruner;
 import linking.pruning.ThresholdPruner;
@@ -38,8 +36,8 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.interfaces.Executable;
 import structure.interfaces.pipeline.CandidateGenerator;
+import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
-import structure.utils.DetectionUtils;
 import structure.utils.Stopwatch;
 import structure.utils.TextUtils;
 
@@ -70,7 +68,7 @@ public class NIFAPIAnnotator implements Executable {
 	private Set<String> stopwords = null;
 	private MentionDetector md = null;
 	private CandidateGenerator candidateGenerator = null;
-	private DisambiguatorAgnos disambiguator = null;
+	private Disambiguator disambiguator = null;
 	private MentionPruner pruner = null;
 	private final EnumEmbeddingMode embeddingMode;
 
@@ -97,22 +95,34 @@ public class NIFAPIAnnotator implements Executable {
 			getLogger().info("Loading mention possibilities...");
 			final StopwordsLoader stopwordsLoader = new StopwordsLoader(KG);
 			this.stopwords = stopwordsLoader.getStopwords();
-			final Map<String, Collection<String>> map = DetectionUtils.loadSurfaceForms(this.KG, stopwordsLoader);
-			final InputProcessor inputProcessor = new InputProcessor(stopwords);
 			// ########################################################
 			// Mention Detection
 			// ########################################################
-			this.md = DetectionUtils.setupMentionDetection(KG, map, inputProcessor);
+			this.md = new BabelfyLinker();
 
 			// ########################################################
 			// Candidate Generator
 			// ########################################################
-			this.candidateGenerator = new CandidateGeneratorMap(map);
+			this.candidateGenerator = new DBpediaLookupCandidateGenerator(null);
 			Stopwatch.endOutputStart(getClass().getName());
 			// Initialise AssignmentChooser
 			Stopwatch.start(chooserWatch);
 
-			this.disambiguator = new DisambiguatorAgnos(this.KG, this.embeddingMode);
+			this.disambiguator = new Disambiguator() {
+
+				@Override
+				public Collection<AnnotatedDocument> execute(PipelineItem callItem, AnnotatedDocument document)
+						throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public AnnotatedDocument disambiguate(AnnotatedDocument document) throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			};
 			Stopwatch.endOutput(chooserWatch);
 			this.pruner = new ThresholdPruner(1.0d);
 			init = true;
@@ -128,19 +138,6 @@ public class NIFAPIAnnotator implements Executable {
 	 * @return
 	 */
 	public String annotate(final InputStream inputStream) {
-		if (false) {
-			try (final BufferedReader brIn = new BufferedReader(new InputStreamReader(inputStream))) {
-				String line = null;
-				getLogger().info("Input from GERBIL - START:");
-				while ((line = brIn.readLine()) != null) {
-					getLogger().error(line);
-				}
-				getLogger().info("Input from GERBIL - END");
-			} catch (IOException e) {
-				getLogger().error("IOException", e);
-			}
-			return "";
-		}
 
 		// 1. Generate a Reader, an InputStream or a simple String that contains the NIF
 		// sent by GERBIL
@@ -229,7 +226,7 @@ public class NIFAPIAnnotator implements Executable {
 	 * @param inputText plain string text to be annotated
 	 * @param markings  markings that are wanted
 	 * @return annotations
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	private Collection<? extends Marking> annotatePlainText(final String inputText, final List<Marking> markings)
 			throws Exception {

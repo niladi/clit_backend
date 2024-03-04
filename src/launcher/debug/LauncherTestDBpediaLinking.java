@@ -1,46 +1,5 @@
 package launcher.debug;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.aksw.gerbil.annotator.impl.babelfy.BabelfyAnnotator;
-import org.aksw.gerbil.annotator.impl.nif.NIFBasedAnnotatorWebservice;
-//TODO Write own class
-import org.aksw.gerbil.annotator.impl.spotlight.SpotlightAnnotator;
-import org.aksw.gerbil.exceptions.GerbilException;
-import org.aksw.gerbil.transfer.nif.Document;
-import org.aksw.gerbil.transfer.nif.Marking;
-import org.aksw.gerbil.transfer.nif.MeaningSpan;
-import org.aksw.gerbil.transfer.nif.data.DocumentImpl;
-import org.aksw.gerbil.transfer.nif.data.SpanImpl;
-
-import linking.disambiguation.consolidation.SumConsolidator;
-import linking.linkers.AgnosLinker;
-import linking.linkers.BabelfyLinker;
-import linking.linkers.DBpediaSpotlightLinker;
-import linking.linkers.MAGLinker;
-import linking.linkers.OpenTapiocaLinker;
-import structure.config.kg.EnumModelType;
-import structure.datatypes.Mention;
-import structure.datatypes.PossibleAssignment;
-import structure.interfaces.linker.Linker;
-import structure.interfaces.pipeline.CandidateGenerator;
-import structure.interfaces.pipeline.Disambiguator;
-import structure.interfaces.pipeline.MentionDetector;
-import structure.utils.LinkerUtils;
-import structure.utils.datastructure.MentionUtils;
-
 /**
  * This was for testing combinations of different linkers. The interfaces are deprecated since 29.10.2021 and were not
  * updated.

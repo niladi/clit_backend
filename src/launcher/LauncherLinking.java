@@ -2,7 +2,6 @@ package launcher;
 
 import java.io.IOException;
 
-import linking.linkers.AgnosLinker;
 import linking.linkers.Falcon2Linker;
 import structure.config.kg.EnumModelType;
 import structure.datatypes.AnnotatedDocument;

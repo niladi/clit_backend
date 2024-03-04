@@ -226,7 +226,7 @@ public class ExperimentBuilder {
 			Collection<Collection<AnnotatedDocument>> dataset = new ArrayList<>();
 			for (String inputText : inputTexts) {
 				AnnotatedDocument document = new AnnotatedDocument(inputText);
-				ArrayList<AnnotatedDocument> resultDocuments = new ArrayList<>(); // for intermediate results
+				Collection<AnnotatedDocument> resultDocuments = new ArrayList<>(); // for intermediate results
 				resultDocuments.add(document);
 				dataset.add(resultDocuments);
 			}
@@ -236,9 +236,9 @@ public class ExperimentBuilder {
 			// input is a dataset
 			for (String datasetName : datasetNames) {
 				Collection<Collection<AnnotatedDocument>> dataset = new ArrayList<>();
-				ArrayList<AnnotatedDocument> dataset2 = new DatasetStore().readDatasetAsAnnotatedDocument(datasetName);
+				Collection<AnnotatedDocument> dataset2 = new DatasetStore().readDatasetAsAnnotatedDocument(datasetName);
 				for (AnnotatedDocument document : dataset2) {
-					ArrayList<AnnotatedDocument> resultDocuments = new ArrayList<>(); // for intermediate results
+					Collection<AnnotatedDocument> resultDocuments = new ArrayList<>(); // for intermediate results
 					resultDocuments.add(document);
 					dataset.add(resultDocuments);
 				}

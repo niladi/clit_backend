@@ -21,30 +21,6 @@ import structure.interfaces.pipeline.MentionDetector;
 
 public class DetectionUtils {
 
-	/**
-	 * Loads the surface forms for a specified KG along with a StopwordsLoader
-	 * instance (which loads the stopwords for the surface forms)
-	 * 
-	 * @param KG              Knowledge Graph for which to load its associated
-	 *                        surface forms
-	 * @param stopwordsLoader loads the stopwords which filter out unwanted surface
-	 *                        forms
-	 * @return
-	 * @throws IOException
-	 */
-	public static Map<String, Collection<String>> loadSurfaceForms(final EnumModelType KG,
-			final StopwordsLoader stopwordsLoader) throws IOException {
-
-		final MentionPossibilityLoader mpl;
-		if (stopwordsLoader == null) {
-			mpl = new MentionPossibilityLoader(KG);
-		} else {
-			mpl = new MentionPossibilityLoader(KG, stopwordsLoader);
-		}
-		Map<String, Collection<String>> map = mpl.exec(new File(FilePaths.FILE_ENTITY_SURFACEFORM_LINKING.getPath(KG)));
-		return map;
-	}
-
 	public static MentionDetector setupMentionDetection(final EnumModelType KG,
 			final Map<String, Collection<String>> map, final InputProcessor inputProcessor) throws Exception {
 		return setupMentionDetection(KG, map, inputProcessor, false);

@@ -27,9 +27,9 @@ import org.json.simple.parser.ParseException;
 
 import com.beust.jcommander.internal.Lists;
 
-import linking.candidategeneration.CandidateGeneratorMap;
-import linking.disambiguation.DisambiguatorAgnos;
-import linking.mentiondetection.InputProcessor;
+import experiment.PipelineItem;
+import linking.candidategeneration.Falcon2CandidateGenerator;
+import linking.linkers.DBpediaSpotlightLinker;
 import linking.mentiondetection.StopwordsLoader;
 import linking.mentiondetection.exact.HashMapCaseInsensitive;
 import linking.pruning.MentionPruner;
@@ -42,8 +42,8 @@ import structure.datatypes.AnnotatedDocument;
 import structure.datatypes.Mention;
 import structure.interfaces.Executable;
 import structure.interfaces.pipeline.CandidateGenerator;
+import structure.interfaces.pipeline.Disambiguator;
 import structure.interfaces.pipeline.MentionDetector;
-import structure.utils.DetectionUtils;
 import structure.utils.Stopwatch;
 
 /**
@@ -75,7 +75,7 @@ public class JSONAPIAnnotator implements Executable {
 	private Set<String> stopwords = null;
 	private Map<String, MentionDetector> mdMap = new HashMap<>();
 	private Map<String, CandidateGenerator> candidateGeneratorMap = new HashMap<>();
-	private Map<String, DisambiguatorAgnos> disambiguatorMap = new HashMap<>();
+	private Map<String, Disambiguator> disambiguatorMap = new HashMap<>();
 	private Map<String, MentionPruner> prunerMap = new HashMap<>();
 	private final EnumEmbeddingMode embeddingMode;
 	private final String outFilepath = "/vol2/kris/api_agnos.log";
@@ -132,27 +132,34 @@ public class JSONAPIAnnotator implements Executable {
 			getLogger().info("Loading mention possibilities...");
 			final StopwordsLoader stopwordsLoader = new StopwordsLoader(KG);
 			this.stopwords = stopwordsLoader.getStopwords();
-			final Map<String, Collection<String>> map = DetectionUtils.loadSurfaceForms(KG, stopwordsLoader);
-			final InputProcessor inputProcessor = new InputProcessor(stopwords);
 			// ########################################################
 			// Mention Detection
 			// ########################################################
-			this.mdMap.put(KG.name(), DetectionUtils.setupMentionDetection(KG, map, inputProcessor));
+			this.mdMap.put(KG.name(), new DBpediaSpotlightLinker());
 
 			// ########################################################
 			// Candidate Generator
 			// ########################################################
-			this.candidateGeneratorMap.put(KG.name(), new CandidateGeneratorMap(map));
+			this.candidateGeneratorMap.put(KG.name(), new Falcon2CandidateGenerator(null));
 			Stopwatch.endOutputStart(getClass().getName());
 			// Initialise AssignmentChooser
 			Stopwatch.start(chooserWatch);
 
-			final Set<String> wantedResources = new HashSet<>();
-			for (Map.Entry<String, Collection<String>> e : map.entrySet()) {
-				wantedResources.addAll(e.getValue());
-			}
+			final Disambiguator disambiguator = new Disambiguator() {
 
-			final DisambiguatorAgnos disambiguator = new DisambiguatorAgnos(KG, this.embeddingMode, wantedResources);
+				@Override
+				public Collection<AnnotatedDocument> execute(PipelineItem callItem, AnnotatedDocument document)
+						throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public AnnotatedDocument disambiguate(AnnotatedDocument document) throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			};
 			this.disambiguatorMap.put(KG.name(), disambiguator);
 			Stopwatch.endOutput(chooserWatch);
 			this.prunerMap.put(KG.name(), new ThresholdPruner(1.0d));
@@ -398,7 +405,7 @@ public class JSONAPIAnnotator implements Executable {
 	 * @param inputText plain string text to be annotated
 	 * @param markings  markings that are wanted
 	 * @return annotations
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	private Collection<? extends Marking> annotatePlainText(final EnumModelType KG, final String inputText,
 			final List<Marking> markings) throws Exception {
@@ -424,8 +431,7 @@ public class JSONAPIAnnotator implements Executable {
 		return retList;
 	}
 
-	private Collection<Mention> linking(final EnumModelType KG, String text, List<Marking> markings)
-			throws Exception {
+	private Collection<Mention> linking(final EnumModelType KG, String text, List<Marking> markings) throws Exception {
 		Collection<Mention> mentions = null;
 
 		Stopwatch.start(linking);
